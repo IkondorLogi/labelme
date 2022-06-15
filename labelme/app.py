@@ -714,7 +714,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 close,
                 deleteFile,
                 None,
-                quit
+                quit,
             ),
         )
         utils.addActions(self.menus.help, (help,))
@@ -778,7 +778,7 @@ class MainWindow(QtWidgets.QMainWindow):
             brightnessContrast,
             None,
             zoom,
-            fitWidth
+            fitWidth,
         )
 
         self.statusBar().showMessage(str(self.tr("%s started.")) % __appname__)
