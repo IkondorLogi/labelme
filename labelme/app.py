@@ -1873,7 +1873,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.addRecentFile(filename)
             self.setClean()
 
-
     def closeFile(self, _value=False):
         if not self.mayContinue():
             return
