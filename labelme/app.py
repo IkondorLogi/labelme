@@ -573,22 +573,22 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         fill_drawing.trigger()
 
-        sort_shapes_by_id = action(
-            self.tr("Sort shapes by group_id"),
+        highlight_group_id = action(
+            self.tr("Highlight group_id"),
             self.setGroupIdSort,
             None,
             "color",
-            self.tr("Sort shape colors by group_id"),
+            self.tr("Highlight shapes with the same group_id"),
             checkable=True,
             enabled=True
         )
 
-        sort_shapes_by_label_color = action(
-            self.tr("Sort shapes by label name"),
+        highlight_label = action(
+            self.tr("Highlight shape label"),
             self.setGroupIdSortFalse,
             None,
             "color",
-            self.tr("Sort shape colors by label name"),
+            self.tr("Highlight shapes with the same label"),
             checkable=True,
             enabled=True
         )
@@ -683,8 +683,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 brightnessContrast,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
-            sort_shapes_by_label_color=sort_shapes_by_label_color,
-            sort_shapes_by_id=sort_shapes_by_id
+            highlight_label=highlight_label,
+            highlight_group_id=highlight_group_id
         )
 
         self.canvas.vertexSelected.connect(self.actions.removePoint.setEnabled)
@@ -728,8 +728,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 None,
                 fill_drawing,
                 None,
-                sort_shapes_by_id,
-                sort_shapes_by_label_color,
+                highlight_group_id,
+                highlight_label,
                 None,
                 hideAll,
                 showAll,
@@ -1185,7 +1185,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def _update_shape_color(self, shape):
         if self.canvas.groupIdColorObjSort:
             if shape.group_id is not None:
-                r, g, b = gGroupIdColorMap[shape.group_id]
+                r, g, b = gGroupIdColorMap[shape.group_id % len(gGroupIdColorMap)]
             else:
                 r, g, b = (255, 255, 255)
         else:
@@ -2105,10 +2105,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setGroupIdSort(self):
         self.canvas.groupIdColorObjSort = True
-        self.actions.sort_shapes_by_id.setChecked(True)
-        self.actions.sort_shapes_by_label_color.setChecked(False)
+        self.actions.highlight_group_id.setChecked(True)
+        self.actions.highlight_label.setChecked(False)
 
     def setGroupIdSortFalse(self):
         self.canvas.groupIdColorObjSort = False
-        self.actions.sort_shapes_by_id.setChecked(False)
-        self.actions.sort_shapes_by_label_color.setChecked(True)
+        self.actions.highlight_group_id.setChecked(False)
+        self.actions.highlight_label.setChecked(True)
