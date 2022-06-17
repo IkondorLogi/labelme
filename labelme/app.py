@@ -583,16 +583,6 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=True
         )
 
-        highlight_label = action(
-            self.tr("Highlight shape label"),
-            self.setGroupIdSortFalse,
-            None,
-            "color",
-            self.tr("Highlight shapes with the same label"),
-            checkable=True,
-            enabled=True
-        )
-
         # Lavel list context menu.
         labelMenu = QtWidgets.QMenu()
         utils.addActions(labelMenu, (edit, delete))
@@ -683,7 +673,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 brightnessContrast,
             ),
             onShapesPresent=(saveAs, hideAll, showAll),
-            highlight_label=highlight_label,
             highlight_group_id=highlight_group_id
         )
 
@@ -729,7 +718,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 fill_drawing,
                 None,
                 highlight_group_id,
-                highlight_label,
                 None,
                 hideAll,
                 showAll,
@@ -2104,11 +2092,9 @@ class MainWindow(QtWidgets.QMainWindow):
         return images
 
     def setGroupIdSort(self):
-        self.canvas.groupIdColorObjSort = True
-        self.actions.highlight_group_id.setChecked(True)
-        self.actions.highlight_label.setChecked(False)
-
-    def setGroupIdSortFalse(self):
-        self.canvas.groupIdColorObjSort = False
-        self.actions.highlight_group_id.setChecked(False)
-        self.actions.highlight_label.setChecked(True)
+        if not self.canvas.groupIdColorObjSort:
+            self.canvas.groupIdColorObjSort = True
+            self.actions.highlight_group_id.setChecked(True)
+        else:
+            self.canvas.groupIdColorObjSort = False
+            self.actions.highlight_group_id.setChecked(False)
