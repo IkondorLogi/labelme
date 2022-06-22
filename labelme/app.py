@@ -1178,11 +1178,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 r, g, b = (255, 255, 255)
         else:
             r, g, b = self._get_rgb_by_label(shape.label)
-        fillShapeR, fillShapeG, fillShapeB = self._get_rgb_by_label(shape.label)
         shape.line_color = QtGui.QColor(r, g, b)
-        shape.vertex_fill_color = QtGui.QColor(fillShapeR, fillShapeG, fillShapeB)
+        shape.vertex_fill_color = QtGui.QColor(r, g, b)
         shape.hvertex_fill_color = QtGui.QColor(255, 255, 255)
-        shape.fill_color = QtGui.QColor(fillShapeR, fillShapeG, fillShapeB, 128)
+        shape.fill_color = QtGui.QColor(r, g, b, 128)
         shape.select_line_color = QtGui.QColor(255, 255, 255)
         shape.select_fill_color = QtGui.QColor(r, g, b, 155)
 
