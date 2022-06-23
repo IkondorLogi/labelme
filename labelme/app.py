@@ -2095,6 +2095,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.canvas.groupIdColorObjSort:
             self.canvas.groupIdColorObjSort = True
             self.actions.highlight_group_id.setChecked(True)
+            self.loadFile(self.filename)
         else:
             self.canvas.groupIdColorObjSort = False
             self.actions.highlight_group_id.setChecked(False)
+            self.loadFile(self.filename)
