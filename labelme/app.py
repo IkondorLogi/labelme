@@ -9,6 +9,7 @@ import webbrowser
 
 import imgviz
 import natsort
+import numpy as np
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
@@ -41,13 +42,7 @@ from labelme.widgets import ZoomWidget
 
 
 LABEL_COLORMAP = imgviz.label_colormap()
-gGroupIdColorMap = {0: (161,18,61), 1: (238,200,30), 2: (70,36,123), 3: (0,255,0),
-                          4: (119,103,158), 5: (238,255,0), 6: (113,126,17), 7:
-                            (0,255,238), 8: (30,0,255), 9: (20,0,220), 10: (0,191,255),
-                          11: (48,187,197), 12: (255, 0,162), 13: (211,146,208), 14:
-                            (128,0,0), 15: (160,115,137), 16: (71,144,154), 17: (128,105,181),
-                          18: (236,162,162), 19: (41,125,18), 20: (255,228,153), 21:
-                            (255,224,224), 22: (157,164,160), 23: (197,169,249)}
+GROUP_ID_COLORMAP = dict((key, tuple(np.random.randint(256, size=3))) for key in range(0, 100))
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -1173,7 +1168,13 @@ class MainWindow(QtWidgets.QMainWindow):
     def _update_shape_color(self, shape):
         if self.canvas.groupIdColorObjSort:
             if shape.group_id is not None:
-                r, g, b = gGroupIdColorMap[shape.group_id % len(gGroupIdColorMap)]
+                group_id_line_color = self._config["group_id_line_color"]
+                if group_id_line_color is not None:
+                    r, g, b = map(int,
+                                  group_id_line_color[shape.group_id
+                                                      % len(group_id_line_color)].split(','))
+                else:
+                    r, g, b = GROUP_ID_COLORMAP[shape.group_id]
             else:
                 r, g, b = (255, 255, 255)
         else:
