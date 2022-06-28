@@ -42,7 +42,7 @@ from labelme.widgets import ZoomWidget
 
 
 LABEL_COLORMAP = imgviz.label_colormap()
-GROUP_ID_COLORMAP = dict((key, tuple(np.random.randint(256, size=3))) for key in range(0, 100))
+GROUP_ID_COLORMAP = utils.shape.generate_random_colors(100, bright=True)
 
 class MainWindow(QtWidgets.QMainWindow):
 
