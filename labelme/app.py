@@ -9,7 +9,6 @@ import webbrowser
 
 import imgviz
 import natsort
-import numpy as np
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
