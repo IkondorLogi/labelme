@@ -121,7 +121,8 @@ def generate_random_colors(shape_amount, bright=False):
     convert to RGB.
     """
     brightness = 1.0 if bright else 0.7
-    hsv = [(i / shape_amount, 1, brightness) for i in range(shape_amount)]
-    colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
+    hsv = [(i / shape_amount, 256, brightness) for i in range(shape_amount)]
+    colors = list(map(lambda c: tuple(abs(hue) for hue in colorsys.hsv_to_rgb(*c)), hsv))
     random.shuffle(colors)
     return colors
+
