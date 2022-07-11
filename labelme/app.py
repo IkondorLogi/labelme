@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import functools
+import html
 import math
 import os
 import os.path as osp
@@ -1089,7 +1090,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if shape.group_id is None:
             item.setText(
                 '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                    shape.label, *shape.fill_color.getRgb()[:3]
+                    html.escape(shape.label), *shape.fill_color.getRgb()[:3]
                 )
             )
         else:
@@ -1160,7 +1161,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._update_shape_color(shape)
         label_list_item.setText(
             '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
-                text, *shape.fill_color.getRgb()[:3]
+                html.escape(text), *shape.fill_color.getRgb()[:3]
             )
         )
 
