@@ -36,12 +36,13 @@ class LabelFile(object):
 
     suffix = ".json"
 
-    def __init__(self, filename=None):
+    def __init__(self, labelAttrs, filename=None):
         self.shapes = []
         self.imagePath = None
         self.imageData = None
+        self.labelAttrs = labelAttrs
         if filename is not None:
-            self.load(filename)
+            self.load(filename, labelAttrs)
         self.filename = filename
 
     @staticmethod
@@ -67,7 +68,7 @@ class LabelFile(object):
             f.seek(0)
             return f.read()
 
-    def load(self, filename):
+    def load(self, filename, labelAttrs):
         keys = [
             "version",
             "imageData",
@@ -83,6 +84,7 @@ class LabelFile(object):
             "group_id",
             "shape_type",
             "flags",
+            *labelAttrs
         ]
         try:
             with open(filename, "r") as f:
@@ -125,6 +127,7 @@ class LabelFile(object):
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),
                     group_id=s.get("group_id"),
+                    **{k: s.get(k) for k in self.labelAttrs},
                     other_data={
                         k: v for k, v in s.items() if k not in shape_keys
                     },

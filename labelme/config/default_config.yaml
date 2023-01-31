@@ -13,6 +13,16 @@ labels: null
 file_search: null
 sort_labels: true
 validate_label: null
+label_with_attrs: "h" # ["h", "sublabel", "your name of chosenRadioButtonObjAttr",
+                      # "your name of objAttributesTextFields",
+                      # "your name of objAttributesNumericRangeFields"]
+object_attrs_values: null # dict() with keys: 'radio_buttons' or 'text_fields' or 'numeric_range'
+object_attrs_variables: null # dict() {"chosenRadioButtonObjAttr": "your name of attribute",
+                             #"objAttributesTextFields": "your name of attribute",
+                             #"objAttributesNumericRangeFields": "your name of attribute"}
+disable_radio_buttons: false
+disable_text_fields: false
+disable_numeric_range: false
 
 default_shape_color: [0, 255, 0]
 shape_color: auto  # null, 'auto', 'manual'

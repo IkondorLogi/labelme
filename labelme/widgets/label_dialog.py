@@ -4,13 +4,14 @@ from qtpy import QT_VERSION
 from qtpy import QtCore
 from qtpy import QtGui
 from qtpy import QtWidgets
+from PyQt5.QtWidgets import QRadioButton
+from PyQt5.QtGui import QIntValidator
 
 from labelme.logger import logger
 import labelme.utils
 
 
 QT5 = QT_VERSION[0] == "5"
-
 
 # TODO(unknown):
 # - Calculate optimal position so as not to go out of screen area.
@@ -44,6 +45,12 @@ class LabelDialog(QtWidgets.QDialog):
         self._fit_to_content = fit_to_content
 
         super(LabelDialog, self).__init__(parent)
+        self.labelWithAttrs = None
+        self.curRadioButtonAttr = None
+        self.radioButtons = None
+        self.objAttrsVals = None
+        self.objAttributesNumRangeFields = None
+        self.layout_range = None
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
@@ -103,7 +110,15 @@ class LabelDialog(QtWidgets.QDialog):
         self.resetFlags()
         layout.addItem(self.flagsLayout)
         self.edit.textChanged.connect(self.updateFlags)
+        self.delObjAttrsTextRangeFields
+        self.deleteRangeLayout
+        self.customAttrsIndxs = []
+        self.customAttrsRange = []
+        self.radioButtonsLayout = QtWidgets.QVBoxLayout()
+        layout.addItem(self.radioButtonsLayout)
+        self.resize(400, 300)
         self.setLayout(layout)
+        self.layout = layout
         # completion
         completer = QtWidgets.QCompleter()
         if not QT5 and completion != "startswith":
@@ -155,6 +170,18 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setText(text)
 
     def updateFlags(self, label_new):
+        if label_new == self.labelWithAttrs:
+            self.setRadioButtonAttrs([self.curRadioButtonAttr,
+                                      self.radioButtons], label_new)
+            if not self.customAttrsIndxs:
+                self.setTextFieldsAttributes(self.objAttrsVals,
+                                             label_new)
+                self.setRangeFieldsAttributes(self.objAttributesNumRangeFields,
+                                              label_new)
+        else:
+            self.deleteRadioButtonLayout()
+            self.deleteRangeLayout()
+            self.delObjAttrsTextRangeFields()
         # keep state of shared flags
         flags_old = self.getFlags()
 
@@ -170,6 +197,32 @@ class LabelDialog(QtWidgets.QDialog):
             item = self.flagsLayout.itemAt(i).widget()
             self.flagsLayout.removeWidget(item)
             item.setParent(None)
+
+    def deleteRadioButtonLayout(self):
+        for i in reversed(range(self.radioButtonsLayout.count())):
+            item = self.radioButtonsLayout.itemAt(i).widget()
+            self.radioButtonsLayout.removeWidget(item)
+            if item is not None:
+                item.setParent(None)
+
+    def deleteRangeLayout(self):
+        if self.layout_range is None:
+            return
+        for i in reversed(range(self.layout_range.count())):
+            item = self.layout_range.itemAt(i).widget()
+            self.layout_range.removeWidget(item)
+            if item is not None:
+                item.setParent(None)
+
+    def delObjAttrsTextRangeFields(self):
+        for i in range(self.layout.count()):
+            if self.layout.itemAt(i) is None:
+                continue
+            item = self.layout.itemAt(i).widget()
+            for itemLayout in self.customAttrsIndxs:
+                if self.layout.indexOf(itemLayout) >= 0:
+                    self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
+        self.customAttrsIndxs.clear()
 
     def resetFlags(self, label=""):
         flags = {}
@@ -200,7 +253,149 @@ class LabelDialog(QtWidgets.QDialog):
             return int(group_id)
         return None
 
-    def popUp(self, text=None, move=True, flags=None, group_id=None):
+    def getRadioButtonsObjAttrs(self):
+        if self.radioButtonsLayout is None:
+            return
+        headDirections = {}
+        for i in range(self.radioButtonsLayout.count()):
+            item = self.radioButtonsLayout.itemAt(i).widget()
+            headDirections[item.text()] = item.isChecked()
+        return [headDir for headDir, present in headDirections.items()
+                if headDirections[headDir]]
+
+    def getObjAtributesTextFields(self):
+        objAtributesTextFields = {}
+        for i in range(self.layout.count()):
+            itemName = self.layout.itemAt(i).widget()
+            # Check if widget is of type QLabel or QLineEdit
+            try:
+                if itemName.text() in self.objAttrsVals[0].keys():
+                    itemVal = self.layout.itemAt(i+1).widget()
+                    objAtributesTextFields[itemName.text()] = itemVal.text()
+            except AttributeError:
+                continue
+        return objAtributesTextFields
+
+    def getObjAtributesNumRangeFields(self):
+        if self.layout_range is None:
+            return
+        objAtributesNumRangeFields = {}
+        for i in range(self.layout_range.count()):
+            itemName = self.layout_range.itemAt(i).widget()
+            if itemName.text() in self.objAttributesNumRangeFields[0].keys():
+                itemVal = self.layout_range.itemAt(i+1).widget()
+                objAtributesNumRangeFields[itemName.text()] = itemVal.text()
+        return objAtributesNumRangeFields
+
+    def setRadioButtonAttrs(self, attrVals, label=""):
+        self.deleteRadioButtonLayout()
+        if self.layout_range is not None:
+            self.deleteRangeLayout()
+        if label != self.labelWithAttrs \
+                or not label or attrVals[1] is None:
+            return
+        for key in attrVals[1]:
+            item = QRadioButton(key, self)
+            if self.disabledLayouts.get("disable_radio_buttons"):
+                item.setEnabled(False)
+            if attrVals[0] is not None:
+                if self.curRadioButtonAttr is not None\
+                        and attrVals[0][0] == key:
+                    item.setChecked(True)
+                else:
+                    item.setChecked(False)
+            else:
+                item.setChecked(False)
+            if self.disabledLayouts.get("disable_radio_buttons") \
+                    and self.curRadioButtonAttr is None:
+                raise Exception("Please remove 'radio_buttons' "
+                                "from 'object_radio_buttons' dictionary "
+                                "or set 'disable_radio_buttons' to False "
+                                "in the config file, if you want to create "
+                                "a label with 'radio_buttons' attribute!")
+            self.radioButtonsLayout.addWidget(item)
+            item.show()
+
+    def setTextFieldsAttributes(self, objAttrsVals, label=""):
+        self.delObjAttrsTextRangeFields()
+        intValidator = QIntValidator()
+        if self.objAttrsVals is None or label != self.labelWithAttrs or\
+                self.objAttrsVals[0] is None:
+            return
+        for attr in self.objAttrsVals[0].keys():
+            itemName = QtWidgets.QLineEdit()
+            if self.disabledLayouts.get("disable_text_fields"):
+                itemName.setEnabled(False)
+            if objAttrsVals[0][attr] == "int" or objAttrsVals[0][attr].isdigit():
+                itemName.setValidator(intValidator)
+            else:
+                itemName.setValidator(labelme.utils.labelValidator())
+            itemValue = QtWidgets.QLabel()
+            if objAttrsVals[0] is not None:
+                itemValue.setText(f"{attr}")
+                if objAttrsVals[0][attr] not in ["int", "str"]:
+                    itemName.setText(f"{objAttrsVals[0][attr]}")
+                else:
+                    itemName.setText(f"")
+                if self.disabledLayouts.get("disable_text_fields"):
+                    if objAttrsVals[0][attr] == "int"\
+                            or objAttrsVals[0][attr] == "str":
+                                raise Exception("Please remove 'text_fields' "
+                                                "from 'object_attrs_values' dictionary "
+                                                "or set 'disable_text_fields' to False in "
+                                                "the config file, if you want to create a "
+                                                "label with 'text_fields' attribute!")
+            self.layout.addWidget(itemValue)
+            self.layout.addWidget(itemName)
+            itemName.show()
+            self.customAttrsIndxs.append(itemValue)
+            self.customAttrsIndxs.append(itemName)
+
+    def setRangeFieldsAttributes(self, objAttributesNumRangeFields, label=""):
+        if objAttributesNumRangeFields is None or\
+                label != self.labelWithAttrs or\
+                objAttributesNumRangeFields[0] is None:
+            return
+        intValidator = QIntValidator()
+        layout_range = QtWidgets.QHBoxLayout()
+        for key in objAttributesNumRangeFields[0].keys():
+            textFieldLabel = QtWidgets.QLabel()
+            textFieldLabel.setText(key)
+            textFieldtext = QtWidgets.QLineEdit()
+            if self.disabledLayouts.get("disable_numeric_range"):
+                textFieldtext.setEnabled(False)
+            if objAttributesNumRangeFields[0][key] == "int"\
+                    or objAttributesNumRangeFields[0][key].isdigit():
+                textFieldtext.setValidator(intValidator)
+            else:
+                textFieldtext.setValidator(labelme.utils.labelValidator())
+            if objAttributesNumRangeFields[0] is not None:
+                if str(objAttributesNumRangeFields[0][key]) not in ["int", "str"]:
+                    textFieldtext.setText(str(objAttributesNumRangeFields[0][key]))
+                else:
+                    textFieldtext.setText(f"")
+                if self.disabledLayouts.get("disable_numeric_range"):
+                    if objAttributesNumRangeFields[0][key] == "int"\
+                        or objAttributesNumRangeFields[0][key] == "str":
+                            raise Exception("Please remove 'numeric_range' "
+                                            "from 'object_attrs_values' dictionary "
+                                            "or set 'disable_numeric_range' to False"
+                                            " in the config file, if you want to create"
+                                            " a label with 'numeric_range' attribute!")
+            layout_range.addWidget(textFieldLabel, 2)
+            layout_range.addWidget(textFieldtext, 3)
+            self.customAttrsRange.append(textFieldLabel)
+            self.customAttrsRange.append(textFieldtext)
+        self.layout_range = layout_range
+        self.layout.addLayout(layout_range)
+
+    def popUp(self,
+              text=None, move=True, flags=None,
+              group_id=None,
+              label_with_attrs=None, chosen_radio_button_obj_attr=None,
+              radio_buttons=None, text_fields=None,
+              numeric_range=None, disabled_layouts=None
+    ):
         if self._fit_to_content["row"]:
             self.labelList.setMinimumHeight(
                 self.labelList.sizeHintForRow(0) * self.labelList.count() + 2
@@ -210,6 +405,13 @@ class LabelDialog(QtWidgets.QDialog):
                 self.labelList.sizeHintForColumn(0) + 2
             )
         # if text is None, the previous label in self.edit is kept
+        self.labelWithAttrs = label_with_attrs
+        self.objAttrsVals = text_fields
+        self.objAttributesNumRangeFields = numeric_range
+        self.disabledLayouts = disabled_layouts
+        if radio_buttons is not None:
+            self.curRadioButtonAttr = chosen_radio_button_obj_attr
+            self.radioButtons = radio_buttons
         if text is None:
             text = self.edit.text()
         if flags:
@@ -218,11 +420,22 @@ class LabelDialog(QtWidgets.QDialog):
             self.resetFlags(text)
         self.edit.setText(text)
         self.edit.setSelection(0, len(text))
+        if text != self.labelWithAttrs:
+            self.deleteRadioButtonLayout()
+            self.deleteRangeLayout()
         if group_id is None:
             self.edit_group_id.clear()
         else:
             self.edit_group_id.setText(str(group_id))
         items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
+        if text_fields is not None:
+            self.objAttrsVals = self.objAttrsVals
+            self.objAttributesNumRangeFields = self.objAttributesNumRangeFields
+            self.setTextFieldsAttributes(self.objAttrsVals)
+            self.setRangeFieldsAttributes(self.objAttributesNumRangeFields)
+        if chosen_radio_button_obj_attr is not None and radio_buttons is not None:
+            self.radioButtons = radio_buttons
+            self.setRadioButtonAttrs([self.curRadioButtonAttr, self.radioButtons], "")
         if items:
             if len(items) != 1:
                 logger.warning("Label list has duplicate '{}'".format(text))
@@ -231,8 +444,16 @@ class LabelDialog(QtWidgets.QDialog):
             self.edit.completer().setCurrentRow(row)
         self.edit.setFocus(QtCore.Qt.PopupFocusReason)
         if move:
+            self.updateFlags(text)
             self.move(QtGui.QCursor.pos())
         if self.exec_():
-            return self.edit.text(), self.getFlags(), self.getGroupId()
+            return (
+                self.edit.text(),
+                self.getFlags(),
+                self.getGroupId(),
+                self.getRadioButtonsObjAttrs(),
+                self.getObjAtributesTextFields(),
+                self.getObjAtributesNumRangeFields()
+            )
         else:
-            return None, None, None
+            return None, None, None, None, None, None
