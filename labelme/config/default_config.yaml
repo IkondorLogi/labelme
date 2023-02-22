@@ -13,7 +13,7 @@ labels: null
 file_search: null
 sort_labels: true
 validate_label: null
-label_with_attrs: "h" # ["h", "sublabel", "your name of chosenRadioButtonObjAttr",
+label_with_attrs: null # ["your name of label with attributes", "sublabel", "your name of chosenRadioButtonObjAttr",
                       # "your name of objAttributesTextFields",
                       # "your name of objAttributesNumericRangeFields"]
 object_attrs_values: null # dict() with keys: 'radio_buttons' or 'text_fields' or 'numeric_range'

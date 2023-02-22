@@ -1286,7 +1286,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             if len(self._config["label_with_attrs"]) > 0:
                 if text[0] in self._config["label_with_attrs"][0]:
-                    # TODO fix index text[0] and double group_id on adding label and crash when you close and reopen json with one attr text fields, and fix bug when you open grouping images
                     label_list_item.setText(
                         '{} <font color="#{:02x}{:02x}{:02x}">● ({}) </font>'.format(
                             text[0], *shape.fill_color.getRgb()[:3], shape.group_id
