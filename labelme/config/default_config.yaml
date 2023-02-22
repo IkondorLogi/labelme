@@ -20,6 +20,7 @@ object_attrs_values: null # dict() with keys: 'radio_buttons' or 'text_fields' o
 object_attrs_variables: null # dict() {"chosenRadioButtonObjAttr": "your name of attribute",
                              #"objAttributesTextFields": "your name of attribute",
                              #"objAttributesNumericRangeFields": "your name of attribute"}
+possible_object_attrs: null
 disable_radio_buttons: false
 disable_text_fields: false
 disable_numeric_range: false

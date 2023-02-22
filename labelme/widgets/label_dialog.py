@@ -5,7 +5,7 @@ from qtpy import QtCore
 from qtpy import QtGui
 from qtpy import QtWidgets
 from PyQt5.QtWidgets import QRadioButton
-from PyQt5.QtGui import QIntValidator
+from PyQt5.QtGui import QIntValidator, QDoubleValidator
 
 from labelme.logger import logger
 import labelme.utils
@@ -218,7 +218,6 @@ class LabelDialog(QtWidgets.QDialog):
         for i in range(self.layout.count()):
             if self.layout.itemAt(i) is None:
                 continue
-            item = self.layout.itemAt(i).widget()
             for itemLayout in self.customAttrsIndxs:
                 if self.layout.indexOf(itemLayout) >= 0:
                     self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
@@ -264,12 +263,16 @@ class LabelDialog(QtWidgets.QDialog):
                 if headDirections[headDir]]
 
     def getObjAtributesTextFields(self):
+        try:
+            objAttrs = self.objAttrsVals[0]
+        except KeyError:
+            objAttrs = self.objAttrsVals
         objAtributesTextFields = {}
         for i in range(self.layout.count()):
             itemName = self.layout.itemAt(i).widget()
             # Check if widget is of type QLabel or QLineEdit
             try:
-                if itemName.text() in self.objAttrsVals[0].keys():
+                if itemName.text() in objAttrs.keys():
                     itemVal = self.layout.itemAt(i+1).widget()
                     objAtributesTextFields[itemName.text()] = itemVal.text()
             except AttributeError:
@@ -277,14 +280,28 @@ class LabelDialog(QtWidgets.QDialog):
         return objAtributesTextFields
 
     def getObjAtributesNumRangeFields(self):
+        attrs = self.objAttributesNumRangeFields
+        objAtributesNumRangeFields = {}
+        numRangeFieldsVals = []
+        try:
+            objAttrs = attrs[0]
+        except KeyError:
+            objAttrs = attrs
         if self.layout_range is None:
             return
-        objAtributesNumRangeFields = {}
         for i in range(self.layout_range.count()):
             itemName = self.layout_range.itemAt(i).widget()
-            if itemName.text() in self.objAttributesNumRangeFields[0].keys():
-                itemVal = self.layout_range.itemAt(i+1).widget()
-                objAtributesNumRangeFields[itemName.text()] = itemVal.text()
+            if objAttrs is None:
+                if itemName.text() is not None and itemName.text()\
+                        not in attrs[1].keys():
+                    numRangeFieldsVals.append(itemName.text())
+            else:
+                if itemName.text() in objAttrs.keys():
+                    itemVal = self.layout_range.itemAt(i+1).widget()
+                    objAtributesNumRangeFields[itemName.text()] = itemVal.text()
+        if objAttrs is None:
+            for indx, key in enumerate(attrs[1].keys()):
+                objAtributesNumRangeFields[key] = numRangeFieldsVals[indx]
         return objAtributesNumRangeFields
 
     def setRadioButtonAttrs(self, attrVals, label=""):
@@ -319,32 +336,62 @@ class LabelDialog(QtWidgets.QDialog):
     def setTextFieldsAttributes(self, objAttrsVals, label=""):
         self.delObjAttrsTextRangeFields()
         intValidator = QIntValidator()
-        if self.objAttrsVals is None or label != self.labelWithAttrs or\
-                self.objAttrsVals[0] is None:
-            return
-        for attr in self.objAttrsVals[0].keys():
-            itemName = QtWidgets.QLineEdit()
-            if self.disabledLayouts.get("disable_text_fields"):
-                itemName.setEnabled(False)
-            if objAttrsVals[0][attr] == "int" or objAttrsVals[0][attr].isdigit():
-                itemName.setValidator(intValidator)
+        objAttrsValsAreEmpty = False
+        floatValidator = QtGui.QDoubleValidator(
+                notation=QtGui.QDoubleValidator.StandardNotation
+            )
+        try:
+            if objAttrsVals[0] is None:
+                objAttrs = {}
+                objAttrsValsAreEmpty = True
+                for key, val in objAttrsVals[1].items():
+                    if val == "str":
+                        objAttrs[key] = "name"
+                    elif val == "int":
+                        objAttrs[key] = 0
+                    else:
+                        objAttrs[key] = 0.0
+                self.objAttrsVals[0] = objAttrs
+                objAttrs = self.objAttrsVals[0]
             else:
-                itemName.setValidator(labelme.utils.labelValidator())
+                objAttrs = self.objAttrsVals[0]
+        except KeyError:
+            objAttrs = self.objAttrsVals
+        if len(self.objAttrsVals) < 1:
+            return
+        if self.objAttrsVals is None or label != self.labelWithAttrs:
+            return
+        for attr in objAttrs.keys():
+            itemName = QtWidgets.QLineEdit()
+            if not objAttrsValsAreEmpty:
+                if self.disabledLayouts.get("disable_text_fields"):
+                    itemName.setEnabled(False)
+                try:
+                    float(objAttrs[attr])
+                    itemName.setValidator(floatValidator)
+                except ValueError:
+                    if objAttrs[attr] == "int" or objAttrs[attr].isdigit():
+                        itemName.setValidator(intValidator)
+                    elif objAttrs[attr] == "float" or objAttrs[attr].isdigit() and "." in objAttrs[attr]:
+                        itemName.setValidator(floatValidator)
+                    else:
+                        itemName.setValidator(labelme.utils.labelValidator())
             itemValue = QtWidgets.QLabel()
-            if objAttrsVals[0] is not None:
+            if objAttrs is not None:
                 itemValue.setText(f"{attr}")
-                if objAttrsVals[0][attr] not in ["int", "str"]:
-                    itemName.setText(f"{objAttrsVals[0][attr]}")
+                if objAttrs[attr] not in ["int", "str", "float"]:
+                    itemName.setText(f"{objAttrs[attr]}")
                 else:
                     itemName.setText(f"")
                 if self.disabledLayouts.get("disable_text_fields"):
-                    if objAttrsVals[0][attr] == "int"\
-                            or objAttrsVals[0][attr] == "str":
-                                raise Exception("Please remove 'text_fields' "
-                                                "from 'object_attrs_values' dictionary "
-                                                "or set 'disable_text_fields' to False in "
-                                                "the config file, if you want to create a "
-                                                "label with 'text_fields' attribute!")
+                    if objAttrs[attr] == "int"\
+                            or objAttrs[attr] == "str"\
+                            or objAttrs[attr] == "float":
+                        raise Exception("Please remove 'text_fields' "
+                                        "from 'object_attrs_values' dictionary "
+                                        "or set 'disable_text_fields' to False in "
+                                        "the config file, if you want to create a "
+                                        "label with 'text_fields' attribute!")
             self.layout.addWidget(itemValue)
             self.layout.addWidget(itemName)
             itemName.show()
@@ -352,36 +399,63 @@ class LabelDialog(QtWidgets.QDialog):
             self.customAttrsIndxs.append(itemName)
 
     def setRangeFieldsAttributes(self, objAttributesNumRangeFields, label=""):
+        try:
+            if objAttributesNumRangeFields[0] is None:
+                objAttrs = {}
+                for key, val in objAttributesNumRangeFields[1].items():
+                    if val == "str":
+                        objAttrs[key] = "name"
+                    elif val == "int":
+                        objAttrs[key] = 0
+                    else:
+                        objAttrs[key] = 0.0
+            else:
+                objAttrs = objAttributesNumRangeFields[0]
+        except KeyError:
+            objAttrs = objAttributesNumRangeFields
         if objAttributesNumRangeFields is None or\
-                label != self.labelWithAttrs or\
-                objAttributesNumRangeFields[0] is None:
+                label != self.labelWithAttrs:
             return
         intValidator = QIntValidator()
+        floatValidator = QtGui.QDoubleValidator(
+            notation=QtGui.QDoubleValidator.StandardNotation
+        )
         layout_range = QtWidgets.QHBoxLayout()
-        for key in objAttributesNumRangeFields[0].keys():
+        for key in objAttrs.keys():
             textFieldLabel = QtWidgets.QLabel()
             textFieldLabel.setText(key)
             textFieldtext = QtWidgets.QLineEdit()
             if self.disabledLayouts.get("disable_numeric_range"):
                 textFieldtext.setEnabled(False)
-            if objAttributesNumRangeFields[0][key] == "int"\
-                    or objAttributesNumRangeFields[0][key].isdigit():
-                textFieldtext.setValidator(intValidator)
-            else:
-                textFieldtext.setValidator(labelme.utils.labelValidator())
-            if objAttributesNumRangeFields[0] is not None:
-                if str(objAttributesNumRangeFields[0][key]) not in ["int", "str"]:
-                    textFieldtext.setText(str(objAttributesNumRangeFields[0][key]))
+            try:
+                float(objAttrs[key])
+                textFieldtext.setValidator(floatValidator)
+            except ValueError:
+                if objAttrs[key] == "int" \
+                        or objAttrs[key].isdigit():
+                    textFieldtext.setValidator(intValidator)
+                elif objAttrs[key] == "float" \
+                        or objAttrs[key].isdigit() and "." in objAttrs[key]:
+                    textFieldtext.setValidator(floatValidator)
+                else:
+                    textFieldtext.setValidator(labelme.utils.labelValidator())
+            if objAttrs is not None:
+                if str(objAttrs[key]) not in ["int", "str", "float"]:
+                    if objAttributesNumRangeFields[0] is not None:
+                        textFieldtext.setText(str(objAttributesNumRangeFields[0][key]))
+                    else:
+                        textFieldtext.setText(f"")
                 else:
                     textFieldtext.setText(f"")
                 if self.disabledLayouts.get("disable_numeric_range"):
-                    if objAttributesNumRangeFields[0][key] == "int"\
-                        or objAttributesNumRangeFields[0][key] == "str":
-                            raise Exception("Please remove 'numeric_range' "
-                                            "from 'object_attrs_values' dictionary "
-                                            "or set 'disable_numeric_range' to False"
-                                            " in the config file, if you want to create"
-                                            " a label with 'numeric_range' attribute!")
+                    if objAttrs[key] == "int"\
+                        or objAttrs[key] == "str"\
+                            or objAttrs[key] == "float":
+                        raise Exception("Please remove 'numeric_range' "
+                                        "from 'object_attrs_values' dictionary "
+                                        "or set 'disable_numeric_range' to False"
+                                        " in the config file, if you want to create"
+                                        " a label with 'numeric_range' attribute!")
             layout_range.addWidget(textFieldLabel, 2)
             layout_range.addWidget(textFieldtext, 3)
             self.customAttrsRange.append(textFieldLabel)

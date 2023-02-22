@@ -1132,6 +1132,11 @@ class MainWindow(QtWidgets.QMainWindow):
         shape = item.shape()
         if shape is None:
             return
+        if not self._config["label_with_attrs"]:
+            raise AttributeError(f"Make sure json file for {self.filename}"
+                                 f" contains only those attributes specified in"
+                                 f" your local Labelme config file "
+                                 f"in 'label_with_attrs'!")
         if shape.label == self._config["label_with_attrs"][0]:
             labelAttrsDict = self.createLabelAttrsDict(shape)
             text, flags, group_id, \
@@ -1258,14 +1263,20 @@ class MainWindow(QtWidgets.QMainWindow):
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
 
+        if not hasattr(self, 'radioButtonConfig'):
+            raise AttributeError(f'Make sure attribute "chosenRadioButtonObjAttr" is included'
+                                 f' into the "object_attrs_variables" in your local'
+                                 f' Labelme config because it is present in the json file for'
+                                 f' for the image {self.filename}!')
         self._update_shape_color(shape)
         if shape.group_id is None:
-            if text in self._config["label_with_attrs"][0]:
-                label_list_item.setText(
-                    '{} <font color="#{:02x}{:02x}{:02x}">● "   |  </font>'.format(
-                        text, *shape.fill_color.getRgb()[:3]
-                    ) + self.labelAttrsTextGenerator(shape)
-                )
+            if len(self._config["label_with_attrs"]) > 0:
+                if text in self._config["label_with_attrs"][0]:
+                    label_list_item.setText(
+                        '{} <font color="#{:02x}{:02x}{:02x}">● "   |  </font>'.format(
+                            text, *shape.fill_color.getRgb()[:3]
+                        ) + self.labelAttrsTextGenerator(shape)
+                    )
             else:
                 label_list_item.setText(
                     '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
@@ -1273,12 +1284,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
                 )
         else:
-            if text[0] in self._config["label_with_attrs"][0]:
-                label_list_item.setText(
-                    '{} <font color="#{:02x}{:02x}{:02x}">● ({}) </font>'.format(
-                        text[0], *shape.fill_color.getRgb()[:3], shape.group_id
-                    ) + self.labelAttrsTextGenerator(shape)
-                )
+            if len(self._config["label_with_attrs"]) > 0:
+                if text[0] in self._config["label_with_attrs"][0]:
+                    # TODO fix index text[0] and double group_id on adding label and crash when you close and reopen json with one attr text fields, and fix bug when you open grouping images
+                    label_list_item.setText(
+                        '{} <font color="#{:02x}{:02x}{:02x}">● ({}) </font>'.format(
+                            text[0], *shape.fill_color.getRgb()[:3], shape.group_id
+                        ) + self.labelAttrsTextGenerator(shape)
+                    )
             else:
                 label_list_item.setText(
                     '{} <font color="#{:02x}{:02x}{:02x} {}">●</font>'.format(
@@ -1301,6 +1314,7 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             if shape.label in self._config["label_with_attrs"] \
                     and "sublabel" in self._config["label_with_attrs"]:
+                # TODO say that there is no sublabel in case radio buttons are not in the config as attrs
                 chosenRadioButtonConf = self.radioButtonConfig
                 r, g, b = self._get_rgb_by_label(shape.__dict__[chosenRadioButtonConf][0])
             else:
@@ -1352,8 +1366,9 @@ class MainWindow(QtWidgets.QMainWindow):
             raise AttributeError(f"Check whether label {shape.label} in the json file {self.filename} "
                                  f"contains 'objAttributesNumericRangeFields' in it!")
         except UnboundLocalError:
-            raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
-                                    f" Labelme config file contains 'objAttributesNumericRangeFields'!")
+            pass
+            #raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
+                                    #f" Labelme config file contains 'objAttributesNumericRangeFields'!")
         try:
             labelTextForTextFields = " ".join(f"{key}: {value} "
                                               for key, value in shapeTextFields.items())
@@ -1397,6 +1412,24 @@ class MainWindow(QtWidgets.QMainWindow):
     def loadShapes(self, shapes, replace=True):
         self._noSelectionSlot = True
         for shape in shapes:
+            if len(self._config["label_with_attrs"]) > 0:
+                if shape.label == self._config["label_with_attrs"][0]:
+                    for attr in self._config["label_with_attrs"][2:]:
+                        if not hasattr(shape, attr):
+                            raise AttributeError(f"Attribute {attr} "
+                                                 f"is missing in {self.filename} in "
+                                                 f"label {shape.label} or is null!")
+                    for attr in self._config["possible_object_attrs"]:
+                        textErr = f"Json file {self.filename}" \
+                                  f" contain attribute {attr}" \
+                                  f" which was not specified in the local" \
+                                  f" config file in 'object_attrs_variables'!"
+                        if hasattr(shape, attr) and\
+                                attr not in self._config["label_with_attrs"][2:]:
+                            raise AttributeError(textErr)
+                        if attr in shape.other_data.keys() and\
+                                attr not in self._config["label_with_attrs"][2:]:
+                            raise AttributeError(textErr)
             self.addLabel(shape)
         self.labelList.clearSelection()
         self._noSelectionSlot = False
@@ -1410,9 +1443,10 @@ class MainWindow(QtWidgets.QMainWindow):
             points = shape["points"]
             shape_type = shape["shape_type"]
             flags = shape["flags"]
-            if label == self._config["label_with_attrs"][0]:
-                labelAttrsDict = {labelAttrsList[i]: shape[labelAttrsList[i]]
-                                  for i in range(0, len(labelAttrsList))}
+            if len(self._config["label_with_attrs"]) > 0:
+                if label == self._config["label_with_attrs"][0]:
+                    labelAttrsDict = {labelAttrsList[i]: shape[labelAttrsList[i]]
+                                      for i in range(0, len(labelAttrsList))}
             group_id = shape["group_id"]
             other_data = shape["other_data"]
             if not points:
