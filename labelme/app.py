@@ -1287,7 +1287,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(self._config["label_with_attrs"]) > 0:
                 if text[0] in self._config["label_with_attrs"][0]:
                     label_list_item.setText(
-                        '{} <font color="#{:02x}{:02x}{:02x}">● ({}) </font>'.format(
+                        '{} <font color="#{:02x}{:02x}{:02x}">● </font>'.format(
                             text[0], *shape.fill_color.getRgb()[:3], shape.group_id
                         ) + self.labelAttrsTextGenerator(shape)
                     )
@@ -1315,7 +1315,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     and "sublabel" in self._config["label_with_attrs"]:
                 # TODO say that there is no sublabel in case radio buttons are not in the config as attrs
                 chosenRadioButtonConf = self.radioButtonConfig
-                r, g, b = self._get_rgb_by_label(shape.__dict__[chosenRadioButtonConf][0])
+                if shape.__dict__[chosenRadioButtonConf] is not None and \
+                        not not shape.__dict__[chosenRadioButtonConf]:
+                    r, g, b = self._get_rgb_by_label(shape.__dict__[chosenRadioButtonConf][0])
+                else:
+                    r, g, b = self._get_rgb_by_label(shape.label)
             else:
                 r, g, b = self._get_rgb_by_label(shape.label)
         shape.line_color = QtGui.QColor(r, g, b)
@@ -1345,7 +1349,11 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
                 radioButtonConf = self.radioButtonConfig
-                radioButton = shape.__dict__[radioButtonConf][0]
+                if shape.__dict__[radioButtonConf] is None or \
+                        not shape.__dict__[radioButtonConf]:
+                    radioButton = ""
+                else:
+                    radioButton = shape.__dict__[radioButtonConf][0]
             if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"]:
                 shapeRangeFieldsConf = self.rangeFieldsConfig
                 shapeRangeFields = shape.__dict__[shapeRangeFieldsConf]
@@ -1359,27 +1367,34 @@ class MainWindow(QtWidgets.QMainWindow):
                            "in 'label_with_attrs' and 'object_attrs_variables' in your local"
                            " Labelme config file are the same")
         try:
-            labelTextRangeFields = " ".join(f"  {key}: {value}"
-                                            for key, value in shapeRangeFields.items())
+            if shapeRangeFields is not None:
+                labelTextRangeFields = " ".join(f"  {key}: {value}"
+                                                for key, value in shapeRangeFields.items())
+            else:
+                labelTextRangeFields = ""
         except AttributeError:
             raise AttributeError(f"Check whether label {shape.label} in the json file {self.filename} "
                                  f"contains 'objAttributesNumericRangeFields' in it!")
         except UnboundLocalError:
-            pass
-            #raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
-                                    #f" Labelme config file contains 'objAttributesNumericRangeFields'!")
+            if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"].keys():
+                raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
+                                        f" Labelme config file contains 'objAttributesNumericRangeFields'!")
         try:
-            labelTextForTextFields = " ".join(f"{key}: {value} "
-                                              for key, value in shapeTextFields.items())
+            if shapeTextFields is not None:
+                labelTextForTextFields = " ".join(f"{key}: {value} "
+                                                  for key, value in shapeTextFields.items())
+            else:
+                labelTextForTextFields = ""
         except AttributeError:
             raise AttributeError(f"Check whether label {shape.label} in the json file {self.filename} "
                                  f"contains 'objAttributesTextFields' in your local"
                                  f" Labelme config file under the key 'object_attrs_variables'")
         except UnboundLocalError:
-            raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
-                                    f" Labelme config file contains 'objAttributesTextFields'!")
+            if "objAttributesTextFields" in self._config["object_attrs_variables"].keys():
+                raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
+                                        f" Labelme config file contains 'objAttributesTextFields'!")
         labelAttrsText = ""
-        if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"] and\
+        if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"] and \
                 "objAttributesTextFields" in self._config["object_attrs_variables"]:
             if shapeTextFields is not None \
                     and shapeRangeFields is not None:

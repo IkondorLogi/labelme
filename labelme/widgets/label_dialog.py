@@ -312,6 +312,9 @@ class LabelDialog(QtWidgets.QDialog):
                     objAtributesNumRangeFields[itemName.text()] = itemVal.text()
         if objAttrs is None:
             for indx, key in enumerate(attrs[1].keys()):
+                if not numRangeFieldsVals:
+                    objAtributesNumRangeFields[key] = None
+                    continue
                 objAtributesNumRangeFields[key] = numRangeFieldsVals[indx]
         return objAtributesNumRangeFields
 
@@ -326,7 +329,8 @@ class LabelDialog(QtWidgets.QDialog):
             item = QRadioButton(key, self)
             if self.disabledLayouts.get("disable_radio_buttons"):
                 item.setEnabled(False)
-            if attrVals[0] is not None:
+            if attrVals[0] is not None and \
+                    not not attrVals[0]:
                 if self.curRadioButtonAttr is not None\
                         and attrVals[0][0] == key:
                     item.setChecked(True)
@@ -439,9 +443,12 @@ class LabelDialog(QtWidgets.QDialog):
             if self.disabledLayouts.get("disable_numeric_range"):
                 textFieldtext.setEnabled(False)
             try:
+                if objAttrs[key] is None:
+                    textFieldtext.setValidator(floatValidator)
+                    continue
                 float(objAttrs[key])
                 textFieldtext.setValidator(floatValidator)
-            except ValueError:
+            except ValueError or TypeError:
                 if objAttrs[key] == "int" \
                         or objAttrs[key].isdigit():
                     textFieldtext.setValidator(intValidator)
