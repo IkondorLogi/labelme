@@ -170,7 +170,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setText(text)
 
     def updateFlags(self, label_new):
-        if label_new == self.labelWithAttrs:
+        if label_new in self.labelWithAttrs:
             self.setRadioButtonAttrs([self.curRadioButtonAttr,
                                       self.radioButtons], label_new)
             if not self.customAttrsIndxs:
@@ -208,11 +208,22 @@ class LabelDialog(QtWidgets.QDialog):
     def deleteRangeLayout(self):
         if self.layout_range is None:
             return
-        for i in reversed(range(self.layout_range.count())):
-            item = self.layout_range.itemAt(i).widget()
-            self.layout_range.removeWidget(item)
-            if item is not None:
-                item.setParent(None)
+        for item in range(self.layout.count()):
+            if isinstance(self.layout.itemAt(item), QtWidgets.QHBoxLayout) or \
+                    isinstance(self.layout.itemAt(item), QtWidgets.QVBoxLayout):
+                for i in reversed(range(self.layout.itemAt(item).count())):
+                    item2 = self.layout.itemAt(item).itemAt(i).widget()
+                    if item2 in self.customAttrsRange:
+                        self.layout.itemAt(item).removeWidget(item2)
+                        if item2 is not None:
+                            item2.setParent(None)
+        for i in range(self.layout.count()):
+            if self.layout.itemAt(i) is None:
+                continue
+            for itemLayout in self.customAttrsRange:
+                if self.layout.indexOf(itemLayout) >= 0:
+                    self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
+        self.customAttrsRange.clear()
 
     def delObjAttrsTextRangeFields(self):
         for i in range(self.layout.count()):
@@ -308,7 +319,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.deleteRadioButtonLayout()
         if self.layout_range is not None:
             self.deleteRangeLayout()
-        if label != self.labelWithAttrs \
+        if label not in self.labelWithAttrs \
                 or not label or attrVals[1] is None:
             return
         for key in attrVals[1]:
@@ -359,7 +370,7 @@ class LabelDialog(QtWidgets.QDialog):
             objAttrs = self.objAttrsVals
         if len(self.objAttrsVals) < 1:
             return
-        if self.objAttrsVals is None or label != self.labelWithAttrs:
+        if self.objAttrsVals is None or label not in self.labelWithAttrs:
             return
         for attr in objAttrs.keys():
             itemName = QtWidgets.QLineEdit()
@@ -414,7 +425,7 @@ class LabelDialog(QtWidgets.QDialog):
         except KeyError:
             objAttrs = objAttributesNumRangeFields
         if objAttributesNumRangeFields is None or\
-                label != self.labelWithAttrs:
+                label not in self.labelWithAttrs:
             return
         intValidator = QIntValidator()
         floatValidator = QtGui.QDoubleValidator(
