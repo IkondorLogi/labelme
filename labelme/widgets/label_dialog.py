@@ -170,18 +170,20 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setText(text)
 
     def updateFlags(self, label_new):
-        if label_new in self.labelWithAttrs:
-            self.setRadioButtonAttrs([self.curRadioButtonAttr,
-                                      self.radioButtons], label_new)
-            if not self.customAttrsIndxs:
-                self.setTextFieldsAttributes(self.objAttrsVals,
-                                             label_new)
-                self.setRangeFieldsAttributes(self.objAttributesNumRangeFields,
-                                              label_new)
-        else:
-            self.deleteRadioButtonLayout()
-            self.deleteRangeLayout()
-            self.delObjAttrsTextRangeFields()
+        if self.labelWithAttrs is not None:
+            if label_new in self.labelWithAttrs:
+                self.setRadioButtonAttrs([self.curRadioButtonAttr,
+                                          self.radioButtons], label_new)
+                if not self.customAttrsIndxs:
+                    self.setTextFieldsAttributes(self.objAttrsVals,
+                                                 label_new)
+                    if not self.customAttrsRange:
+                        self.setRangeFieldsAttributes(self.objAttributesNumRangeFields,
+                                                      label_new)
+            else:
+                self.deleteRadioButtonLayout()
+                self.deleteRangeLayout()
+                self.delObjAttrsTextRangeFields()
         # keep state of shared flags
         flags_old = self.getFlags()
 
@@ -359,6 +361,8 @@ class LabelDialog(QtWidgets.QDialog):
             if objAttrsVals[0] is None:
                 objAttrs = {}
                 objAttrsValsAreEmpty = True
+                if objAttrsVals[1] == "text_fields":
+                    return
                 for key, val in objAttrsVals[1].items():
                     if val == "str":
                         objAttrs[key] = "name"
@@ -414,9 +418,13 @@ class LabelDialog(QtWidgets.QDialog):
             self.customAttrsIndxs.append(itemName)
 
     def setRangeFieldsAttributes(self, objAttributesNumRangeFields, label=""):
+        if self.customAttrsRange:
+            return
         try:
             if objAttributesNumRangeFields[0] is None:
                 objAttrs = {}
+                if objAttributesNumRangeFields[1] == "numeric_range":
+                    return
                 for key, val in objAttributesNumRangeFields[1].items():
                     if val == "str":
                         objAttrs[key] = "name"

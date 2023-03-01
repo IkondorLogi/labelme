@@ -1087,14 +1087,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def createLabelAttrsDict(self, shape=None):
         confAttrValues = self._config["object_attrs_values"]
-        labelAttrsDict = {"label_with_attrs": self._config["label_with_attrs"][0],
+        labelAttrsDict = {"label_with_attrs": None,
                           "chosen_radio_button_obj_attr": None,
-                          "radio_buttons": confAttrValues.get("radio_buttons"),
+                          "radio_buttons": None,
                           "text_fields": None,
                           "numeric_range": None,
-                          "disabled_layouts": {"disable_numeric_range": self._config["disable_numeric_range"],
-                                               "disable_text_fields": self._config["disable_text_fields"],
-                                               "disable_radio_buttons": self._config["disable_radio_buttons"]}}
+                          "disabled_layouts": None}
+        if not not self._config["label_with_attrs"]:
+            labelAttrsDict["label_with_attrs"] = self._config["label_with_attrs"][0]
+            labelAttrsDict["radio_buttons"] = confAttrValues.get("radio_buttons")
+            labelAttrsDict["disabled_layouts"] = {"disable_numeric_range": self._config["disable_numeric_range"],
+                                                  "disable_text_fields": self._config["disable_text_fields"],
+                                                  "disable_radio_buttons": self._config["disable_radio_buttons"]}
         if shape is not None:
             if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
                 radioButtonConf = self.radioButtonConfig
@@ -1137,7 +1141,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                  f" contains only those attributes specified in"
                                  f" your local Labelme config file "
                                  f"in 'label_with_attrs'!")
-        if shape.label == self._config["label_with_attrs"][0]:
+        if not self._config["label_with_attrs"]:
+            text, flags, group_id = self.labelDialog.popUp(
+                text=shape.label,
+                flags=shape.flags,
+                group_id=shape.group_id
+            )
+        elif shape.label in self._config["label_with_attrs"][0]:
             labelAttrsDict = self.createLabelAttrsDict(shape)
             text, flags, group_id, \
                 chosenRadioButtonObjAttr, objAttributesTextFields, \
@@ -1458,20 +1468,23 @@ class MainWindow(QtWidgets.QMainWindow):
             shape_type = shape["shape_type"]
             flags = shape["flags"]
             if len(self._config["label_with_attrs"]) > 0:
-                if label == self._config["label_with_attrs"][0]:
+                if label in self._config["label_with_attrs"][0]:
                     labelAttrsDict = {labelAttrsList[i]: shape[labelAttrsList[i]]
                                       for i in range(0, len(labelAttrsList))}
             group_id = shape["group_id"]
             other_data = shape["other_data"]
+            shapeAttrs = Shape(
+                label=label,
+                shape_type=shape_type,
+                group_id=group_id,
+            )
             if not points:
                 # skip point-empty shape
                 continue
-            if label not in self._config["label_with_attrs"][0]:
-                shape = Shape(
-                    label=label,
-                    shape_type=shape_type,
-                    group_id=group_id,
-                )
+            if not self._config["label_with_attrs"]:
+                shape = shapeAttrs
+            elif label not in self._config["label_with_attrs"][0]:
+                shape = shapeAttrs
             else:
                 shape = Shape(
                     label=label,
@@ -1510,7 +1523,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
         def format_shape(s):
             data = s.other_data.copy()
-            if s.label in self._config["label_with_attrs"][0]:
+            dataDict = dict(
+                label=s.label.encode("utf-8") if PY2 else s.label,
+                points=[(p.x(), p.y()) for p in s.points],
+                group_id=s.group_id,
+                shape_type=s.shape_type,
+                flags=s.flags,
+            )
+            if not self._config["label_with_attrs"]:
+                data.update(dataDict)
+            elif s.label in self._config["label_with_attrs"][0]:
                 labelAttrsDict = {}
                 if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
                     chosenRadioButtonConf = self.radioButtonConfig
@@ -1532,19 +1554,11 @@ class MainWindow(QtWidgets.QMainWindow):
                     )
                 )
             else:
-                data.update(
-                    dict(
-                        label=s.label.encode("utf-8") if PY2 else s.label,
-                        points=[(p.x(), p.y()) for p in s.points],
-                        group_id=s.group_id,
-                        shape_type=s.shape_type,
-                        flags=s.flags,
-                    )
-                )
+                data.update(dict(dataDict))
             dashFreeData = {k.replace("_", "-") if "_" in k
                                                    and k.replace("_", "-") in
                                                    self._config["label_with_attrs"]
-                                                else k: v for k, v in data.items()}
+                            else k: v for k, v in data.items()}
             return dashFreeData
 
         shapes = [format_shape(item.shape()) for item in self.labelList]
@@ -1642,8 +1656,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                              "text_fields"]
             labelAttrsDict["numeric_range"] = [config.get("numeric_range"),
                                                "numeric_range"]
-            text, flags, group_id, chosenRadioButtonObjAttr,\
-                objAttributesTextFields,\
+            text, flags, group_id, chosenRadioButtonObjAttr, \
+                objAttributesTextFields, \
                 objAttributesNumericRangeFields = self.labelDialog.popUp(text,
                                                                          **labelAttrsDict)
             if not text:
@@ -1660,13 +1674,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.labelList.clearSelection()
             shape = self.canvas.setLastLabel(text, flags)
             shape.group_id = group_id
-            if text == self._config["label_with_attrs"][0]:
-                if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"].keys():
-                    shape.__dict__[self.radioButtonConfig] = chosenRadioButtonObjAttr
-                if "objAttributesTextFields" in self._config["object_attrs_variables"].keys():
-                    shape.__dict__[self.textFieldsConfig] = objAttributesTextFields
-                if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"].keys():
-                    shape.__dict__[self.rangeFieldsConfig] = objAttributesNumericRangeFields
+            if self._config["label_with_attrs"]:
+                if text in self._config["label_with_attrs"][0]:
+                    if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"].keys():
+                        shape.__dict__[self.radioButtonConfig] = chosenRadioButtonObjAttr
+                    if "objAttributesTextFields" in self._config["object_attrs_variables"].keys():
+                        shape.__dict__[self.textFieldsConfig] = objAttributesTextFields
+                    if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"].keys():
+                        shape.__dict__[self.rangeFieldsConfig] = objAttributesNumericRangeFields
             self.addLabel(shape)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
