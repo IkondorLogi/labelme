@@ -1283,7 +1283,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if len(self._config["label_with_attrs"]) > 0:
                 if text in self._config["label_with_attrs"][0]:
                     label_list_item.setText(
-                        '{} <font color="#{:02x}{:02x}{:02x}">● "   |  </font>'.format(
+                        '{} <font color="#{:02x}{:02x}{:02x}">●  </font>'.format(
                             text, *shape.fill_color.getRgb()[:3]
                         ) + self.labelAttrsTextGenerator(shape)
                     )
