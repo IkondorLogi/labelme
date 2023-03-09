@@ -1357,26 +1357,39 @@ class MainWindow(QtWidgets.QMainWindow):
         return (0, 255, 0)
 
     def labelAttrsTextGenerator(self, shape):
+        rangeAttrs = "objAttributesNumericRangeFields"
+        objTextAttrs = "objAttributesTextFields"
+        radioAttrs = "chosenRadioButtonObjAttr"
+        objAttrsVars = "object_attrs_variables"
+        keyErrText = f"Make sure all the names of attributes in " \
+                     f"'label_with_attrs' and {objAttrsVars} in your local" \
+                     f" Labelme config file are the same"
+        attrErrText = f"Check whether label {shape.label} in the json file" \
+                      f" {self.filename} contains {rangeAttrs} in it!"
+        unbondLoclErrText = f"Check whether {objAttrsVars} in your local Labelme" \
+                            f" config file contains {rangeAttrs}!"
+        textFieldsAttrsErr = f"Check whether label {shape.label} in the json file " \
+                             f"{self.filename} contains {objTextAttrs} " \
+                             f"in your local Labelme config file under the key {objAttrsVars}"
+        textAttrsUnbLocVarErrText = f"Check whether {objAttrsVars} in your" \
+                                    f" local Labelme config file contains {objTextAttrs}!"
         try:
-            if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
+            if radioAttrs in self._config[objAttrsVars]:
                 radioButtonConf = self.radioButtonConfig
                 if shape.__dict__[radioButtonConf] is None or \
                         not shape.__dict__[radioButtonConf]:
                     radioButton = ""
                 else:
                     radioButton = shape.__dict__[radioButtonConf][0]
-            if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"]:
+            if rangeAttrs in self._config[objAttrsVars]:
                 shapeRangeFieldsConf = self.rangeFieldsConfig
                 shapeRangeFields = shape.__dict__[shapeRangeFieldsConf]
 
-            if "objAttributesTextFields" in self._config["object_attrs_variables"]:
+            if objTextAttrs in self._config[objAttrsVars]:
                 shapeTextFieldsConf = self.textFieldsConfig
                 shapeTextFields = shape.__dict__[shapeTextFieldsConf]
-
         except KeyError:
-            raise KeyError("Make sure all the names of attributes "
-                           "in 'label_with_attrs' and 'object_attrs_variables' in your local"
-                           " Labelme config file are the same")
+            raise KeyError(keyErrText)
         try:
             if shapeRangeFields is not None:
                 labelTextRangeFields = " ".join(f"  {key}: {value}"
@@ -1384,12 +1397,10 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 labelTextRangeFields = ""
         except AttributeError:
-            raise AttributeError(f"Check whether label {shape.label} in the json file {self.filename} "
-                                 f"contains 'objAttributesNumericRangeFields' in it!")
+            raise AttributeError(attrErrText)
         except UnboundLocalError:
-            if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"].keys():
-                raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
-                                        f" Labelme config file contains 'objAttributesNumericRangeFields'!")
+            if rangeAttrs in self._config["object_attrs_variables"].keys():
+                raise UnboundLocalError(unbondLoclErrText)
         try:
             if shapeTextFields is not None:
                 labelTextForTextFields = " ".join(f"{key}: {value} "
@@ -1397,16 +1408,13 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 labelTextForTextFields = ""
         except AttributeError:
-            raise AttributeError(f"Check whether label {shape.label} in the json file {self.filename} "
-                                 f"contains 'objAttributesTextFields' in your local"
-                                 f" Labelme config file under the key 'object_attrs_variables'")
+            raise AttributeError(textFieldsAttrsErr)
         except UnboundLocalError:
-            if "objAttributesTextFields" in self._config["object_attrs_variables"].keys():
-                raise UnboundLocalError(f"Check whether 'object_attrs_variables' in your local"
-                                        f" Labelme config file contains 'objAttributesTextFields'!")
+            if objTextAttrs in self._config[objAttrsVars].keys():
+                raise UnboundLocalError(textAttrsUnbLocVarErrText)
         labelAttrsText = ""
-        if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"] and \
-                "objAttributesTextFields" in self._config["object_attrs_variables"]:
+        if rangeAttrs in self._config[objAttrsVars] and \
+                objTextAttrs in self._config[objAttrsVars]:
             if shapeTextFields is not None \
                     and shapeRangeFields is not None:
                 labelAttrsText = "|  " + labelTextForTextFields \
@@ -1417,14 +1425,14 @@ class MainWindow(QtWidgets.QMainWindow):
             elif shapeRangeFields is None \
                     and shapeTextFields is not None:
                 labelAttrsText = "|  " + labelTextForTextFields
-        if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"] and \
-                "objAttributesTextFields" not in self._config["object_attrs_variables"]:
+        if rangeAttrs in self._config[objAttrsVars] and \
+                objTextAttrs not in self._config[objAttrsVars]:
             if shapeRangeFields is not None:
                 labelAttrsText = "|  " + labelTextRangeFields
-        elif "objAttributesNumericRangeFields" not in self._config["object_attrs_variables"] and \
-                "objAttributesTextFields" in self._config["object_attrs_variables"]:
+        elif rangeAttrs not in self._config[objAttrsVars] and \
+                objTextAttrs in self._config[objAttrsVars]:
             labelAttrsText = "|  " + labelTextForTextFields
-        if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
+        if radioAttrs in self._config[objAttrsVars]:
             if radioButton is not None:
                 labelAttrsText = radioButton + " " + labelAttrsText
         return labelAttrsText
