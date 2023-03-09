@@ -1066,17 +1066,15 @@ class MainWindow(QtWidgets.QMainWindow):
         Validate the values for label attributes provided by the user in
         the local Labelme config file '.labelmerc'
         """
+        errText = "Please make sure in your local Labelme config file"
         if not type(self._config["object_attrs_variables"]) is dict:
-            raise TypeError("Please make sure in your local Labelme config file"
-                            " dictionary(should contain curly brackets) was"
-                            " provided to 'object_attrs_variables' as a value")
+            raise TypeError(f"{errText} dictionary(should contain curly brackets) was"
+                            f" provided to 'object_attrs_variables' as a value")
         if not type(self._config["label_with_attrs"]) is list:
-            raise TypeError("Please make sure in your local Labelme config file"
-                            " list(should contain square brackets) was"
+            raise TypeError(f"{errText} list(should contain square brackets) was"
                             " provided to 'object_attrs_variables' as a value")
         if not type(self._config["object_attrs_values"]) is dict:
-            raise TypeError("Please make sure in your local Labelme config file"
-                            " dictionary(should contain curly brackets) was"
+            raise TypeError(f"{errText} dictionary(should contain curly brackets) was"
                             " provided to 'object_attrs_values' as a value")
         attrsNameList = ["radio_buttons", "text_fields", "numeric_range"]
         for localAttr in self._config["object_attrs_values"].keys():
@@ -1084,25 +1082,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 raise AttributeError(f"You provided in your local Labelme config"
                                      f" '{localAttr}', but it has to be one of these "
                                      f"{attrsNameList}!")
+        if len(self._config["label_with_attrs"][2:]) != \
+                len(self._config["object_attrs_values"].keys()):
+            raise AttributeError(f"Quantity of attributes in in your local Labelme"
+                                 f" config in 'label_with_attrs' "
+                                 f"does not match 'object_attrs_values'")
 
     def createLabelAttrsDict(self, shape=None):
         confAttrValues = self._config["object_attrs_values"]
+        radButtnAttr = "chosen_radio_button_obj_attr"
+        numRangStr = "numeric_range"
         labelAttrsDict = {"label_with_attrs": None,
-                          "chosen_radio_button_obj_attr": None,
+                          radButtnAttr: None,
                           "radio_buttons": None,
                           "text_fields": None,
-                          "numeric_range": None,
+                          numRangStr: None,
                           "disabled_layouts": None}
+        disabledAttrs = {"disable_numeric_range": self._config["disable_numeric_range"],
+                         "disable_text_fields": self._config["disable_text_fields"],
+                         "disable_radio_buttons": self._config["disable_radio_buttons"]}
         if not not self._config["label_with_attrs"]:
             labelAttrsDict["label_with_attrs"] = self._config["label_with_attrs"][0]
             labelAttrsDict["radio_buttons"] = confAttrValues.get("radio_buttons")
-            labelAttrsDict["disabled_layouts"] = {"disable_numeric_range": self._config["disable_numeric_range"],
-                                                  "disable_text_fields": self._config["disable_text_fields"],
-                                                  "disable_radio_buttons": self._config["disable_radio_buttons"]}
+            labelAttrsDict["disabled_layouts"] = disabledAttrs
         if shape is not None:
             if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
                 radioButtonConf = self.radioButtonConfig
-                labelAttrsDict["chosen_radio_button_obj_attr"] = shape.__dict__[radioButtonConf]
+                labelAttrsDict[radButtnAttr] = shape.__dict__[radioButtonConf]
             if "objAttributesTextFields" in self._config["object_attrs_variables"]:
                 textFieldsConf = self.textFieldsConfig
                 labelAttrsDict["text_fields"] = [shape.__dict__[textFieldsConf]
@@ -1110,17 +1116,17 @@ class MainWindow(QtWidgets.QMainWindow):
                                                  else None, confAttrValues.get("text_fields")]
             if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"]:
                 rangeFieldsConf = self.rangeFieldsConfig
-                labelAttrsDict["numeric_range"] = [shape.__dict__[rangeFieldsConf]
-                                                   if shape.__dict__[rangeFieldsConf] is not None
-                                                   else None, confAttrValues.get("numeric_range")]
+                labelAttrsDict[numRangStr] = [shape.__dict__[rangeFieldsConf]
+                                              if shape.__dict__[rangeFieldsConf] is not None
+                                              else None, confAttrValues.get(numRangStr)]
         else:
-            labelAttrsDict["chosen_radio_button_obj_attr"] = None
+            labelAttrsDict[radButtnAttr] = None
             if "radio_buttons" in confAttrValues:
                 labelAttrsDict["radio_buttons"] = confAttrValues["radio_buttons"]
             if "text_fields" in confAttrValues:
                 labelAttrsDict["text_fields"] = confAttrValues["text_fields"]
-            if "numeric_range" in confAttrValues:
-                labelAttrsDict["numeric_range"] = confAttrValues["numeric_range"]
+            if numRangStr in confAttrValues:
+                labelAttrsDict[numRangStr] = confAttrValues[numRangStr]
         return labelAttrsDict
 
     def editLabel(self, item=None):
@@ -1273,7 +1279,8 @@ class MainWindow(QtWidgets.QMainWindow):
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
 
-        if not hasattr(self, 'radioButtonConfig'):
+        if not hasattr(self, 'radioButtonConfig') and\
+                not hasattr(self, 'radioButtonConfig'):
             raise AttributeError(f'Make sure attribute "chosenRadioButtonObjAttr" is included'
                                  f' into the "object_attrs_variables" in your local'
                                  f' Labelme config because it is present in the json file for'
@@ -1324,7 +1331,6 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             if shape.label in self._config["label_with_attrs"] \
                     and "sublabel" in self._config["label_with_attrs"]:
-                # TODO say that there is no sublabel in case radio buttons are not in the config as attrs
                 chosenRadioButtonConf = self.radioButtonConfig
                 if shape.__dict__[chosenRadioButtonConf] is not None and \
                         not not shape.__dict__[chosenRadioButtonConf]:
