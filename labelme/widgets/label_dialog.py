@@ -350,6 +350,17 @@ class LabelDialog(QtWidgets.QDialog):
             self.radioButtonsLayout.addWidget(item)
             item.show()
 
+    def defaultAttrsValsTextGenerator(self, inputObjAttrsVals):
+        objAttrs = {}
+        for key, val in inputObjAttrsVals[1].items():
+            if val == "str":
+                objAttrs[key] = "name"
+            elif val == "int":
+                objAttrs[key] = 0
+            else:
+                objAttrs[key] = 0.0
+        return objAttrs
+
     def setTextFieldsAttributes(self, objAttrsVals, label=""):
         self.delObjAttrsTextRangeFields()
         intValidator = QIntValidator()
@@ -359,17 +370,11 @@ class LabelDialog(QtWidgets.QDialog):
             )
         try:
             if objAttrsVals[0] is None:
-                objAttrs = {}
                 objAttrsValsAreEmpty = True
                 if objAttrsVals[1] == "text_fields":
                     return
-                for key, val in objAttrsVals[1].items():
-                    if val == "str":
-                        objAttrs[key] = "name"
-                    elif val == "int":
-                        objAttrs[key] = 0
-                    else:
-                        objAttrs[key] = 0.0
+                objAttrs = self.defaultAttrsValsTextGenerator(self,
+                                                              objAttrsVals)
                 self.objAttrsVals[0] = objAttrs
                 objAttrs = self.objAttrsVals[0]
             else:
@@ -422,16 +427,10 @@ class LabelDialog(QtWidgets.QDialog):
             return
         try:
             if objAttributesNumRangeFields[0] is None:
-                objAttrs = {}
                 if objAttributesNumRangeFields[1] == "numeric_range":
                     return
-                for key, val in objAttributesNumRangeFields[1].items():
-                    if val == "str":
-                        objAttrs[key] = "name"
-                    elif val == "int":
-                        objAttrs[key] = 0
-                    else:
-                        objAttrs[key] = 0.0
+                objAttrs = self.defaultAttrsValsTextGenerator(self,
+                                                              objAttributesNumRangeFields)
             else:
                 objAttrs = objAttributesNumRangeFields[0]
         except KeyError:
