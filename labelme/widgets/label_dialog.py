@@ -320,6 +320,14 @@ class LabelDialog(QtWidgets.QDialog):
                 objAtributesNumRangeFields[key] = numRangeFieldsVals[indx]
         return objAtributesNumRangeFields
 
+    def errTextGenerator(self, attr):
+        text = f"Please remove {attr} " \
+               f"from 'object_radio_buttons' dictionary " \
+               f"or set 'disable_{attr} to False " \
+               f"in the config file, if you want to create " \
+               f"a label with {attr} attribute!"
+        return text
+
     def setRadioButtonAttrs(self, attrVals, label=""):
         self.deleteRadioButtonLayout()
         if self.layout_range is not None:
@@ -342,11 +350,7 @@ class LabelDialog(QtWidgets.QDialog):
                 item.setChecked(False)
             if self.disabledLayouts.get("disable_radio_buttons") \
                     and self.curRadioButtonAttr is None:
-                raise Exception("Please remove 'radio_buttons' "
-                                "from 'object_radio_buttons' dictionary "
-                                "or set 'disable_radio_buttons' to False "
-                                "in the config file, if you want to create "
-                                "a label with 'radio_buttons' attribute!")
+                raise Exception(self.errTextGenerator('radio_buttons'))
             self.radioButtonsLayout.addWidget(item)
             item.show()
 
@@ -411,11 +415,7 @@ class LabelDialog(QtWidgets.QDialog):
                     if objAttrs[attr] == "int"\
                             or objAttrs[attr] == "str"\
                             or objAttrs[attr] == "float":
-                        raise Exception("Please remove 'text_fields' "
-                                        "from 'object_attrs_values' dictionary "
-                                        "or set 'disable_text_fields' to False in "
-                                        "the config file, if you want to create a "
-                                        "label with 'text_fields' attribute!")
+                        raise Exception(self.errTextGenerator('text_fields'))
             self.layout.addWidget(itemValue)
             self.layout.addWidget(itemName)
             itemName.show()
@@ -476,11 +476,7 @@ class LabelDialog(QtWidgets.QDialog):
                     if objAttrs[key] == "int"\
                         or objAttrs[key] == "str"\
                             or objAttrs[key] == "float":
-                        raise Exception("Please remove 'numeric_range' "
-                                        "from 'object_attrs_values' dictionary "
-                                        "or set 'disable_numeric_range' to False"
-                                        " in the config file, if you want to create"
-                                        " a label with 'numeric_range' attribute!")
+                        raise Exception(self.errTextGenerator('numeric_range'))
             layout_range.addWidget(textFieldLabel, 2)
             layout_range.addWidget(textFieldtext, 3)
             self.customAttrsRange.append(textFieldLabel)
