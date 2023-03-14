@@ -51,6 +51,9 @@ class LabelDialog(QtWidgets.QDialog):
         self.objAttrsVals = None
         self.objAttributesNumRangeFields = None
         self.layout_range = None
+        self.float_validator = QtGui.QDoubleValidator(
+            notation=QtGui.QDoubleValidator.StandardNotation
+        )
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
@@ -369,9 +372,6 @@ class LabelDialog(QtWidgets.QDialog):
         self.delObjAttrsTextRangeFields()
         intValidator = QIntValidator()
         objAttrsValsAreEmpty = False
-        floatValidator = QtGui.QDoubleValidator(
-                notation=QtGui.QDoubleValidator.StandardNotation
-            )
         try:
             if objAttrsVals[0] is None:
                 objAttrsValsAreEmpty = True
@@ -396,12 +396,12 @@ class LabelDialog(QtWidgets.QDialog):
                     itemName.setEnabled(False)
                 try:
                     float(objAttrs[attr])
-                    itemName.setValidator(floatValidator)
+                    itemName.setValidator(self.float_validator)
                 except ValueError:
                     if objAttrs[attr] == "int" or objAttrs[attr].isdigit():
                         itemName.setValidator(intValidator)
                     elif objAttrs[attr] == "float" or objAttrs[attr].isdigit() and "." in objAttrs[attr]:
-                        itemName.setValidator(floatValidator)
+                        itemName.setValidator(self.float_validator)
                     else:
                         itemName.setValidator(labelme.utils.labelValidator())
             itemValue = QtWidgets.QLabel()
@@ -439,9 +439,6 @@ class LabelDialog(QtWidgets.QDialog):
                 label not in self.labelWithAttrs:
             return
         intValidator = QIntValidator()
-        floatValidator = QtGui.QDoubleValidator(
-            notation=QtGui.QDoubleValidator.StandardNotation
-        )
         layout_range = QtWidgets.QHBoxLayout()
         for key in objAttrs.keys():
             textFieldLabel = QtWidgets.QLabel()
@@ -451,10 +448,10 @@ class LabelDialog(QtWidgets.QDialog):
                 textFieldtext.setEnabled(False)
             try:
                 if objAttrs[key] is None:
-                    textFieldtext.setValidator(floatValidator)
+                    textFieldtext.setValidator(self.float_validator)
                     continue
                 float(objAttrs[key])
-                textFieldtext.setValidator(floatValidator)
+                textFieldtext.setValidator(self.float_validator)
             except ValueError or TypeError:
                 if objAttrs[key] == "int" \
                         or objAttrs[key].isdigit():
