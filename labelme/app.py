@@ -1072,7 +1072,7 @@ class MainWindow(QtWidgets.QMainWindow):
                             f" provided to 'object_attrs_variables' as a value")
         if not type(self._config["label_with_attrs"]) is list:
             raise TypeError(f"{errText} list(should contain square brackets) was"
-                            " provided to 'object_attrs_variables' as a value")
+                            " provided to 'label_with_attrs' as a value")
         if not type(self._config["object_attrs_values"]) is dict:
             raise TypeError(f"{errText} dictionary(should contain curly brackets) was"
                             " provided to 'object_attrs_values' as a value")
