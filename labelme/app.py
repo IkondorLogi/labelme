@@ -1092,6 +1092,9 @@ class MainWindow(QtWidgets.QMainWindow):
         confAttrValues = self._config["object_attrs_values"]
         radButtnAttr = "chosen_radio_button_obj_attr"
         numRangStr = "numeric_range"
+        emptyLabelAttrs = {"radio_buttons": True,
+                           "text_fields": True,
+                           numRangStr: True}
         labelAttrsDict = {"label_with_attrs": None,
                           radButtnAttr: None,
                           "radio_buttons": None,
@@ -1105,6 +1108,7 @@ class MainWindow(QtWidgets.QMainWindow):
             labelAttrsDict["label_with_attrs"] = self._config["label_with_attrs"][0]
             labelAttrsDict["radio_buttons"] = confAttrValues.get("radio_buttons")
             labelAttrsDict["disabled_layouts"] = disabledAttrs
+            emptyLabelAttrs["radio_buttons"] = False
         if shape is not None:
             if "chosenRadioButtonObjAttr" in self._config["object_attrs_variables"]:
                 radioButtonConf = self.radioButtonConfig
@@ -1114,20 +1118,25 @@ class MainWindow(QtWidgets.QMainWindow):
                 labelAttrsDict["text_fields"] = [shape.__dict__[textFieldsConf]
                                                  if shape.__dict__[textFieldsConf] is not None
                                                  else None, confAttrValues.get("text_fields")]
+                emptyLabelAttrs["text_fields"] = False
             if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"]:
                 rangeFieldsConf = self.rangeFieldsConfig
                 labelAttrsDict[numRangStr] = [shape.__dict__[rangeFieldsConf]
                                               if shape.__dict__[rangeFieldsConf] is not None
                                               else None, confAttrValues.get(numRangStr)]
+                emptyLabelAttrs[numRangStr] = False
         else:
             labelAttrsDict[radButtnAttr] = None
             if "radio_buttons" in confAttrValues:
                 labelAttrsDict["radio_buttons"] = confAttrValues["radio_buttons"]
+                emptyLabelAttrs["radio_buttons"] = False
             if "text_fields" in confAttrValues:
                 labelAttrsDict["text_fields"] = confAttrValues["text_fields"]
+                emptyLabelAttrs["text_fields"] = False
             if numRangStr in confAttrValues:
                 labelAttrsDict[numRangStr] = confAttrValues[numRangStr]
-        return labelAttrsDict
+                emptyLabelAttrs[numRangStr] = False
+        return emptyLabelAttrs, labelAttrsDict
 
     def editLabel(self, item=None):
         if item and not isinstance(item, LabelListWidgetItem):
@@ -1154,24 +1163,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 group_id=shape.group_id
             )
         elif shape.label in self._config["label_with_attrs"][0]:
-            labelAttrsDict = self.createLabelAttrsDict(shape)
-            text, flags, group_id, \
+            emptyLabelAttrs, labelAttrsDict = self.createLabelAttrsDict(shape)
+            _, text, flags, group_id, \
                 chosenRadioButtonObjAttr, objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(
-                text=shape.label,
-                flags=shape.flags,
-                group_id=shape.group_id,
-                **labelAttrsDict
-            )
+                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text=shape.label,
+                                                                         flags=shape.flags,
+                                                                         group_id=shape.group_id, **labelAttrsDict)
         else:
-            labelAttrsDict = self.createLabelAttrsDict()
-            text, flags, group_id, \
+            emptyLabelAttrs, labelAttrsDict = self.createLabelAttrsDict()
+            _, text, flags, group_id, \
                 chosenRadioButtonObjAttr, objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(
-                text=shape.label,
-                flags=shape.flags,
-                group_id=shape.group_id,
-                **labelAttrsDict)
+                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text=shape.label,
+                                                                         flags=shape.flags,
+                                                                         group_id=shape.group_id, **labelAttrsDict)
         if text is None:
             return
         if not self.validateLabel(text):
@@ -1280,7 +1284,7 @@ class MainWindow(QtWidgets.QMainWindow):
             action.setEnabled(True)
 
         if not hasattr(self, 'radioButtonConfig') and\
-                not hasattr(self, 'radioButtonConfig'):
+                hasattr(shape, 'chosenRadioButtonObjAttr'):
             raise AttributeError(f'Make sure attribute "chosenRadioButtonObjAttr" is included'
                                  f' into the "object_attrs_variables" in your local'
                                  f' Labelme config because it is present in the json file for'
@@ -1664,16 +1668,16 @@ class MainWindow(QtWidgets.QMainWindow):
             text = items[0].data(Qt.UserRole)
         flags = {}
         group_id = None
-        labelAttrsDict = self.createLabelAttrsDict()
+        emptyLabelAttrs, labelAttrsDict = self.createLabelAttrsDict()
         if self._config["display_label_popup"] or not text:
             previous_text = self.labelDialog.edit.text()
             labelAttrsDict["text_fields"] = [config.get("text_fields"),
                                              "text_fields"]
             labelAttrsDict["numeric_range"] = [config.get("numeric_range"),
                                                "numeric_range"]
-            text, flags, group_id, chosenRadioButtonObjAttr, \
+            _, text, flags, group_id, chosenRadioButtonObjAttr, \
                 objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(text,
+                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text,
                                                                          **labelAttrsDict)
             if not text:
                 self.labelDialog.edit.setText(previous_text)

@@ -50,6 +50,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.radioButtons = None
         self.objAttrsVals = None
         self.objAttributesNumRangeFields = None
+        self.emptyLabelAttrs = None
         self.layout_range = None
         self.float_validator = QtGui.QDoubleValidator(
             notation=QtGui.QDoubleValidator.StandardNotation
@@ -269,6 +270,8 @@ class LabelDialog(QtWidgets.QDialog):
         return None
 
     def getRadioButtonsObjAttrs(self):
+        if self.emptyLabelAttrs["radio_buttons"]:
+            return None
         if self.radioButtonsLayout is None:
             return
         headDirections = {}
@@ -279,6 +282,8 @@ class LabelDialog(QtWidgets.QDialog):
                 if headDirections[headDir]]
 
     def getObjAtributesTextFields(self):
+        if self.emptyLabelAttrs["text_fields"]:
+            return None
         try:
             objAttrs = self.objAttrsVals[0]
         except KeyError:
@@ -296,6 +301,8 @@ class LabelDialog(QtWidgets.QDialog):
         return objAtributesTextFields
 
     def getObjAtributesNumRangeFields(self):
+        if self.emptyLabelAttrs["numeric_range"]:
+            return None
         attrs = self.objAttributesNumRangeFields
         objAtributesNumRangeFields = {}
         numRangeFieldsVals = []
@@ -341,6 +348,8 @@ class LabelDialog(QtWidgets.QDialog):
             itemName.setValidator(labelme.utils.labelValidator())
 
     def setRadioButtonAttrs(self, attrVals, label=""):
+        if self.emptyLabelAttrs["radio_buttons"]:
+            return
         self.deleteRadioButtonLayout()
         if self.layout_range is not None:
             self.deleteRangeLayout()
@@ -378,6 +387,8 @@ class LabelDialog(QtWidgets.QDialog):
         return objAttrs
 
     def setTextFieldsAttributes(self, objAttrsVals, label=""):
+        if self.emptyLabelAttrs["text_fields"]:
+            return
         self.delObjAttrsTextRangeFields()
         objAttrsValsAreEmpty = False
         try:
@@ -427,7 +438,7 @@ class LabelDialog(QtWidgets.QDialog):
             self.customAttrsIndxs.append(itemName)
 
     def setRangeFieldsAttributes(self, objAttributesNumRangeFields, label=""):
-        if self.customAttrsRange:
+        if self.emptyLabelAttrs["numeric_range"] or self.customAttrsRange:
             return
         try:
             if objAttributesNumRangeFields[0] is None:
@@ -479,12 +490,13 @@ class LabelDialog(QtWidgets.QDialog):
         self.layout.addLayout(layout_range)
 
     def popUp(self,
+              emptyLabelAttrs,
               text=None, move=True, flags=None,
               group_id=None,
               label_with_attrs=None, chosen_radio_button_obj_attr=None,
               radio_buttons=None, text_fields=None,
               numeric_range=None, disabled_layouts=None
-    ):
+              ):
         if self._fit_to_content["row"]:
             self.labelList.setMinimumHeight(
                 self.labelList.sizeHintForRow(0) * self.labelList.count() + 2
@@ -498,6 +510,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.objAttrsVals = text_fields
         self.objAttributesNumRangeFields = numeric_range
         self.disabledLayouts = disabled_layouts
+        self.emptyLabelAttrs = emptyLabelAttrs
         if radio_buttons is not None:
             self.curRadioButtonAttr = chosen_radio_button_obj_attr
             self.radioButtons = radio_buttons
@@ -537,12 +550,11 @@ class LabelDialog(QtWidgets.QDialog):
             self.move(QtGui.QCursor.pos())
         if self.exec_():
             return (
-                self.edit.text(),
+                self.emptyLabelAttrs, self.edit.text(),
                 self.getFlags(),
-                self.getGroupId(),
-                self.getRadioButtonsObjAttrs(),
+                self.getGroupId(), self.getRadioButtonsObjAttrs(),
                 self.getObjAtributesTextFields(),
                 self.getObjAtributesNumRangeFields()
             )
         else:
-            return None, None, None, None, None, None
+            return None, None, None, None, None, None, None
