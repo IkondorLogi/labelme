@@ -396,8 +396,11 @@ class LabelDialog(QtWidgets.QDialog):
                 objAttrsValsAreEmpty = True
                 if objAttrsVals[1] == "text_fields":
                     return
-                objAttrs = self.defaultAttrsValsTextGenerator(self,
-                                                              objAttrsVals)
+                if not self.emptyLabelAttrs["text_fields"]:
+                    objAttrs = self.defaultAttrsValsTextGenerator(objAttrsVals)
+                else:
+                    objAttrs = self.defaultAttrsValsTextGenerator(self,
+                                                                  objAttrsVals)
                 self.objAttrsVals[0] = objAttrs
                 objAttrs = self.objAttrsVals[0]
             else:
@@ -444,8 +447,11 @@ class LabelDialog(QtWidgets.QDialog):
             if objAttributesNumRangeFields[0] is None:
                 if objAttributesNumRangeFields[1] == "numeric_range":
                     return
-                objAttrs = self.defaultAttrsValsTextGenerator(self,
-                                                              objAttributesNumRangeFields)
+                if not self.emptyLabelAttrs["numeric_range"]:
+                    objAttrs = self.defaultAttrsValsTextGenerator(objAttributesNumRangeFields)
+                else:
+                    objAttrs = self.defaultAttrsValsTextGenerator(self,
+                                                                  objAttributesNumRangeFields)
             else:
                 objAttrs = objAttributesNumRangeFields[0]
         except KeyError:

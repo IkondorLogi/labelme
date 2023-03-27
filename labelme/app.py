@@ -1087,6 +1087,13 @@ class MainWindow(QtWidgets.QMainWindow):
             raise AttributeError(f"Quantity of attributes in in your local Labelme"
                                  f" config in 'label_with_attrs' "
                                  f"does not match 'object_attrs_values'")
+        for attrName in self._config["label_with_attrs"]:
+            if not isinstance(attrName, str) or attrName == "sublabel":
+                continue
+            if attrName not in self._config["object_attrs_variables"].values():
+                raise KeyError(f"Attribute name '{attrName}'"
+                               f" is not present in 'object_attrs_variables', but"
+                               f" defined in label_with_attrs as an attribute!")
 
     def createLabelAttrsDict(self, shape=None):
         confAttrValues = self._config["object_attrs_values"]
