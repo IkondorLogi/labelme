@@ -1340,7 +1340,7 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 r, g, b = (255, 255, 255)
         else:
-            if shape.label in self._config["label_with_attrs"] \
+            if shape.label in self._config["label_with_attrs"][0] \
                     and "sublabel" in self._config["label_with_attrs"]:
                 chosenRadioButtonConf = self.radioButtonConfig
                 if shape.__dict__[chosenRadioButtonConf] is not None and \
