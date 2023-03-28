@@ -51,6 +51,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.objAttrsVals = None
         self.objAttributesNumRangeFields = None
         self.emptyLabelAttrs = None
+        self.label_dialog_size = None
         self.layout_range = None
         self.float_validator = QtGui.QDoubleValidator(
             notation=QtGui.QDoubleValidator.StandardNotation
@@ -123,6 +124,10 @@ class LabelDialog(QtWidgets.QDialog):
         self.resize(400, 300)
         self.setLayout(layout)
         self.layout = layout
+        if self.label_dialog_size is not None and\
+                self.label_dialog_size is not "auto":
+            label_dialog_size = eval(self.label_dialog_size)
+            self.resize(label_dialog_size[0], label_dialog_size[1])
         # completion
         completer = QtWidgets.QCompleter()
         if not QT5 and completion != "startswith":
@@ -496,7 +501,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.layout.addLayout(layout_range)
 
     def popUp(self,
-              emptyLabelAttrs,
+              label_dialog_size, emptyLabelAttrs,
               text=None, move=True, flags=None,
               group_id=None,
               label_with_attrs=None, chosen_radio_button_obj_attr=None,
@@ -517,6 +522,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.objAttributesNumRangeFields = numeric_range
         self.disabledLayouts = disabled_layouts
         self.emptyLabelAttrs = emptyLabelAttrs
+        self.label_dialog_size = label_dialog_size
         if radio_buttons is not None:
             self.curRadioButtonAttr = chosen_radio_button_obj_attr
             self.radioButtons = radio_buttons
@@ -541,6 +547,9 @@ class LabelDialog(QtWidgets.QDialog):
             self.objAttributesNumRangeFields = self.objAttributesNumRangeFields
             self.setTextFieldsAttributes(self.objAttrsVals)
             self.setRangeFieldsAttributes(self.objAttributesNumRangeFields)
+            if label_dialog_size is not None and label_dialog_size is not "auto":
+                dialog_widget_size = eval(label_dialog_size)
+                self.resize(dialog_widget_size[0], dialog_widget_size[1])
         if chosen_radio_button_obj_attr is not None and radio_buttons is not None:
             self.radioButtons = radio_buttons
             self.setRadioButtonAttrs([self.curRadioButtonAttr, self.radioButtons], "")

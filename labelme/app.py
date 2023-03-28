@@ -74,6 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.textFieldsConfig = self._config["object_attrs_variables"]["objAttributesTextFields"]
         if "objAttributesNumericRangeFields" in self._config["object_attrs_variables"]:
             self.rangeFieldsConfig = self._config["object_attrs_variables"]["objAttributesNumericRangeFields"]
+        self.label_dialog_size = self._config["label_dialog_size"]
 
         # set default shape colors
         Shape.line_color = QtGui.QColor(*self._config["shape"]["line_color"])
@@ -1173,14 +1174,16 @@ class MainWindow(QtWidgets.QMainWindow):
             emptyLabelAttrs, labelAttrsDict = self.createLabelAttrsDict(shape)
             _, text, flags, group_id, \
                 chosenRadioButtonObjAttr, objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text=shape.label,
+                objAttributesNumericRangeFields = self.labelDialog.popUp(self.label_dialog_size,
+                                                                         emptyLabelAttrs, text=shape.label,
                                                                          flags=shape.flags,
                                                                          group_id=shape.group_id, **labelAttrsDict)
         else:
             emptyLabelAttrs, labelAttrsDict = self.createLabelAttrsDict()
             _, text, flags, group_id, \
                 chosenRadioButtonObjAttr, objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text=shape.label,
+                objAttributesNumericRangeFields = self.labelDialog.popUp(self.label_dialog_size,
+                                                                         emptyLabelAttrs, text=shape.label,
                                                                          flags=shape.flags,
                                                                          group_id=shape.group_id, **labelAttrsDict)
         if text is None:
@@ -1684,7 +1687,8 @@ class MainWindow(QtWidgets.QMainWindow):
                                                "numeric_range"]
             _, text, flags, group_id, chosenRadioButtonObjAttr, \
                 objAttributesTextFields, \
-                objAttributesNumericRangeFields = self.labelDialog.popUp(emptyLabelAttrs, text,
+                objAttributesNumericRangeFields = self.labelDialog.popUp(self.label_dialog_size,
+                                                                         emptyLabelAttrs, text,
                                                                          **labelAttrsDict)
             if not text:
                 self.labelDialog.edit.setText(previous_text)
