@@ -121,7 +121,6 @@ class LabelDialog(QtWidgets.QDialog):
         self.customAttrsRange = []
         self.radioButtonsLayout = QtWidgets.QVBoxLayout()
         layout.addItem(self.radioButtonsLayout)
-        self.resize(400, 300)
         self.setLayout(layout)
         self.layout = layout
         if self.label_dialog_size is not None and\
