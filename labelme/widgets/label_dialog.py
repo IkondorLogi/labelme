@@ -125,7 +125,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.setLayout(layout)
         self.layout = layout
         if self.label_dialog_size is not None and\
-                self.label_dialog_size is not "auto":
+                self.label_dialog_size != "auto":
             label_dialog_size = eval(self.label_dialog_size)
             self.resize(label_dialog_size[0], label_dialog_size[1])
         # completion
@@ -216,6 +216,14 @@ class LabelDialog(QtWidgets.QDialog):
             if item is not None:
                 item.setParent(None)
 
+    def deleteLayoutItem(self, layoutName):
+        for i in range(self.layout.count()):
+            if self.layout.itemAt(i) is None:
+                continue
+            for itemLayout in layoutName:
+                if self.layout.indexOf(itemLayout) >= 0:
+                    self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
+
     def deleteRangeLayout(self):
         if self.layout_range is None:
             return
@@ -228,21 +236,11 @@ class LabelDialog(QtWidgets.QDialog):
                         self.layout.itemAt(item).removeWidget(item2)
                         if item2 is not None:
                             item2.setParent(None)
-        for i in range(self.layout.count()):
-            if self.layout.itemAt(i) is None:
-                continue
-            for itemLayout in self.customAttrsRange:
-                if self.layout.indexOf(itemLayout) >= 0:
-                    self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
+        self.deleteLayoutItem(self.customAttrsRange)
         self.customAttrsRange.clear()
 
     def delObjAttrsTextRangeFields(self):
-        for i in range(self.layout.count()):
-            if self.layout.itemAt(i) is None:
-                continue
-            for itemLayout in self.customAttrsIndxs:
-                if self.layout.indexOf(itemLayout) >= 0:
-                    self.layout.removeWidget(self.layout.itemAt(self.layout.indexOf(itemLayout)).widget())
+        self.deleteLayoutItem(self.customAttrsIndxs)
         self.customAttrsIndxs.clear()
 
     def resetFlags(self, label=""):
@@ -547,7 +545,7 @@ class LabelDialog(QtWidgets.QDialog):
             self.objAttributesNumRangeFields = self.objAttributesNumRangeFields
             self.setTextFieldsAttributes(self.objAttrsVals)
             self.setRangeFieldsAttributes(self.objAttributesNumRangeFields)
-            if label_dialog_size is not None and label_dialog_size is not "auto":
+            if label_dialog_size is not None and label_dialog_size != "auto":
                 dialog_widget_size = eval(label_dialog_size)
                 self.resize(dialog_widget_size[0], dialog_widget_size[1])
         if chosen_radio_button_obj_attr is not None and radio_buttons is not None:
