@@ -51,9 +51,14 @@ class Shape(object):
         shape_type=None,
         flags=None,
         group_id=None,
+        **label_attributes
     ):
         self.label = label
         self.group_id = group_id
+        for label_attr in label_attributes:
+            if label_attr is not None:
+                setattr(self,
+                        label_attr, label_attributes[label_attr])
         self.points = []
         self.fill = False
         self.selected = False
