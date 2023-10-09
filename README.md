@@ -10,15 +10,15 @@
   <a href="https://pypi.python.org/pypi/labelme"><img src="https://img.shields.io/pypi/v/labelme.svg"></a>
   <a href="https://pypi.org/project/labelme"><img src="https://img.shields.io/pypi/pyversions/labelme.svg"></a>
   <a href="https://github.com/wkentaro/labelme/actions"><img src="https://github.com/wkentaro/labelme/workflows/ci/badge.svg?branch=main&event=push"></a>
-  <a href="https://hub.docker.com/r/wkentaro/labelme"><img src="https://img.shields.io/docker/cloud/build/wkentaro/labelme"></a>
 </div>
 
 <div align="center">
-  <a href="#installation"><b>Installation</b></a> |
-  <a href="#usage"><b>Usage</b></a> |
-  <a href="https://github.com/wkentaro/labelme/tree/main/examples/tutorial#tutorial-single-image-example"><b>Tutorial</b></a> |
-  <a href="https://github.com/wkentaro/labelme/tree/main/examples"><b>Examples</b></a> |
-  <a href="https://github.com/wkentaro/labelme/discussions"><b>Discussions</b></a>
+  <a href="#starter-pack"><b>Starter Pack</b></a>
+  | <a href="#installation"><b>Installation</b></a>
+  | <a href="#usage"><b>Usage</b></a>
+  | <a href="#examples"><b>Examples</b></a>
+  | <a href="https://github.com/wkentaro/labelme/discussions"><b>Community</b></a>
+  <!-- | <a href="https://www.youtube.com/playlist?list=PLI6LvFw0iflh3o33YYnVIfOpaO0hc5Dzw"><b>Youtube FAQ</b></a> -->
 </div>
 
 <br/>
@@ -52,19 +52,28 @@ It is written in Python and uses Qt for its graphical interface.
 - [x] Exporting COCO-format dataset for instance segmentation. ([instance segmentation](examples/instance_segmentation))
 
 
+## Starter Pack
 
-## Requirements
+If you're new to Labelme, you can get started with [Labelme Starter Pack](https://wkentaro.gumroad.com/l/labelmeapp) (FREE), which contains:
 
-- Ubuntu / macOS / Windows
-- Python3
-- [PyQt5 / PySide2](http://www.riverbankcomputing.co.uk/software/pyqt/intro)
+- **Installation guides** for all platforms: Windows, macOS, and Linux 💻
+- **Step-by-step tutorials**: first annotation to editing, exporting, and integrating with other programs 📕
+- **A compilation of valuable resources** for further exploration 🔗.
+
+
+
+<!-- ## Requirements -->
+<!--  -->
+<!-- - Ubuntu / macOS / Windows -->
+<!-- - Python3 -->
+<!-- - [PyQt5 / PySide2](http://www.riverbankcomputing.co.uk/software/pyqt/intro) -->
 
 
 ## Installation
 
 There are options:
 
-- Platform agnostic installation: [Anaconda](#anaconda), [Docker](#docker)
+- Platform agnostic installation: [Anaconda](#anaconda)
 - Platform specific installation: [Ubuntu](#ubuntu), [macOS](#macos), [Windows](#windows)
 - Pre-build binaries from [the release section](https://github.com/wkentaro/labelme/releases)
 
@@ -82,20 +91,6 @@ source activate labelme
 pip install labelme
 # or you can install everything by conda command
 # conda install labelme -c conda-forge
-```
-
-### Docker
-
-You need install [docker](https://www.docker.com), then run below:
-
-```bash
-# on macOS
-socat TCP-LISTEN:6000,reuseaddr,fork UNIX-CLIENT:\"$DISPLAY\" &
-docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=docker.for.mac.host.internal:0 -v $(pwd):/root/workdir wkentaro/labelme
-
-# on Linux
-xhost +
-docker run -it -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=:0 -v $(pwd):/root/workdir wkentaro/labelme
 ```
 
 ### Ubuntu
@@ -160,13 +155,6 @@ labelme data_annotated/  # Open directory to annotate all images in it
 labelme data_annotated/ --labels labels.txt  # specify label list with a file
 ```
 
-For more advanced usage, please refer to the examples:
-
-* [Tutorial (Single Image Example)](examples/tutorial)
-* [Semantic Segmentation Example](examples/semantic_segmentation)
-* [Instance Segmentation Example](examples/instance_segmentation)
-* [Video Annotation Example](examples/video_annotation)
-
 ### Command Line Arguments
 - `--output` specifies the location that annotations will be written to. If the location ends with .json, a single annotation will be written to this file. Only one image can be annotated if a location is specified with .json. If the location does not end with .json, the program will assume it is a directory. Annotations will be stored in this directory with a name that corresponds to the image that the annotation was made on.
 - The first time you run labelme, it will create a config file in `~/.labelmerc`. You can edit this file and the changes will be applied the next time that you launch labelme. If you would prefer to use a config file from another location, you can specify this file with the `--config` flag.
@@ -174,7 +162,7 @@ For more advanced usage, please refer to the examples:
 - Flags are assigned to an entire image. [Example](examples/classification)
 - Labels are assigned to a single polygon. [Example](examples/bbox_detection)
 
-## FAQ
+### FAQ
 
 - **How to convert JSON file to numpy array?** See [examples/tutorial](examples/tutorial#convert-to-dataset).
 - **How to load label PNG file?** See [examples/tutorial](examples/tutorial#how-to-load-label-png-file).
@@ -182,7 +170,23 @@ For more advanced usage, please refer to the examples:
 - **How to get annotations for instance segmentation?** See [examples/instance_segmentation](examples/instance_segmentation).
 
 
-## Developing
+## Examples
+
+### Dataset examples
+
+* [Object Detection Dataset](https://wkentaro.gumroad.com/l/labelmedataset-example-object-detection): 20 object categories and 1.7K images
+
+### Annotation examples
+
+A few object categories and images:
+
+* [Image Classification](examples/image_classification)
+* [Bounding Box Detection](examples/bbox_detection)
+* [Semantic Segmentation](examples/semantic_segmentation)
+* [Instance Segmentation](examples/instance_segmentation)
+* [Video Annotation](examples/video_annotation)
+
+## How to develop
 
 ```bash
 git clone https://github.com/wkentaro/labelme.git
@@ -195,7 +199,7 @@ pip install -e .
 ```
 
 
-## How to build standalone executable
+### How to build standalone executable
 
 Below shows how to build the standalone executable on macOS, Linux and Windows.  
 
@@ -206,13 +210,14 @@ conda activate labelme
 
 # Build the standalone executable
 pip install .
+pip install 'matplotlib<3.3'
 pip install pyinstaller
 pyinstaller labelme.spec
 dist/labelme --version
 ```
 
 
-## How to contribute
+### How to contribute
 
 Make sure below test passes on your environment.  
 See `.github/workflows/ci.yml` for more detail.
